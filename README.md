@@ -1,36 +1,171 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎵 Jean-Michel Volume
 
-## Getting Started
+Une application web moderne qui vous permet de contrôler le volume de Spotify en temps réel avec votre voix !
 
-First, run the development server:
+## ✨ Fonctionnalités
+
+- 🎤 **Contrôle vocal en temps réel** : Le volume de Spotify s'adapte automatiquement à l'intensité de votre voix
+- 🎨 **Interface moderne** : Design élégant avec Tailwind CSS et animations fluides
+- 🔒 **Authentification sécurisée** : Connexion via OAuth Spotify
+- 📊 **Visualisation en direct** : Barres de progression pour visualiser le volume vocal et Spotify
+- 📱 **Responsive** : Fonctionne sur tous les appareils
+
+## 🚀 Installation
+
+### Prérequis
+
+- Node.js 18+ et pnpm installés
+- Un compte Spotify Premium (nécessaire pour l'API de contrôle de lecture)
+- Un navigateur moderne avec support du micro
+
+### 1. Cloner le projet
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <votre-repo>
+cd spotify-volume-control
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Installer les dépendances
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Configurer Spotify Developer
 
-## Learn More
+1. Allez sur [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Créez une nouvelle application
+3. Configurez les paramètres :
+   - **Redirect URIs** : Ajoutez `http://localhost:3000/api/auth/callback/spotify`
+   - Notez votre **Client ID** et **Client Secret**
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Configurer les variables d'environnement
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Copiez le fichier `.env.example` vers `.env.local` :
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cp .env.example .env.local
+```
 
-## Deploy on Vercel
+Éditez `.env.local` avec vos identifiants :
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```env
+AUTH_SECRET=<générez avec: openssl rand -base64 32>
+SPOTIFY_CLIENT_ID=<votre-client-id-spotify>
+SPOTIFY_CLIENT_SECRET=<votre-client-secret-spotify>
+AUTH_URL=http://localhost:3000
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 5. Lancer l'application
+
+```bash
+pnpm dev
+```
+
+Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
+
+## 📖 Comment l'utiliser
+
+1. **Connectez-vous** avec votre compte Spotify
+2. **Lancez de la musique** sur n'importe quel appareil Spotify (ordinateur, téléphone, enceinte connectée)
+3. **Autorisez l'accès au microphone** quand votre navigateur le demande
+4. **Cliquez sur "Démarrer le contrôle vocal"**
+5. **Parlez ou faites du bruit** : plus vous êtes fort, plus le volume Spotify augmente !
+
+## 🛠️ Technologies utilisées
+
+- **Next.js 16** : Framework React avec App Router
+- **TypeScript** : Typage statique
+- **Tailwind CSS 4** : Styles modernes et responsive
+- **NextAuth.js** : Authentification OAuth
+- **Web Audio API** : Analyse du volume vocal en temps réel
+- **Spotify Web API** : Contrôle de la lecture
+
+## 📁 Structure du projet
+
+```
+├── app/
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts  # Route NextAuth
+│   │   └── spotify/volume/route.ts      # API de contrôle du volume
+│   ├── layout.tsx                       # Layout principal
+│   └── page.tsx                         # Page d'accueil
+├── components/
+│   └── VoiceVolumeController.tsx        # Composant de contrôle vocal
+├── hooks/
+│   └── useVoiceVolume.ts                # Hook pour l'analyse audio
+├── lib/
+│   └── auth.ts                          # Configuration NextAuth
+└── types/
+    └── next-auth.d.ts                   # Types TypeScript pour NextAuth
+```
+
+## 🔧 Fonctionnement technique
+
+### Capture et analyse audio
+
+L'application utilise l'API Web Audio pour :
+1. Capturer le flux audio du microphone
+2. Analyser les fréquences en temps réel avec `AnalyserNode`
+3. Calculer le volume moyen
+4. Normaliser entre 0 et 100
+
+### Synchronisation avec Spotify
+
+- Le volume est envoyé à l'API Spotify toutes les 200ms maximum
+- L'application vérifie l'état de lecture toutes les 5 secondes
+- Le volume est limité entre 0 et 100%
+
+## ⚠️ Notes importantes
+
+- **Spotify Premium requis** : L'API de contrôle de lecture nécessite un compte Premium
+- **Application desktop recommandée** : Utilisez l'application desktop Spotify (Windows/Mac/Linux) pour le contrôle du volume
+- **Web Player non supporté** : Le Spotify Web Player ne permet pas le contrôle du volume via l'API
+- **Appareil actif requis** : Un appareil Spotify doit être en lecture pour que le contrôle fonctionne
+- **HTTPS en production** : Pour utiliser le microphone en production, l'application doit être servie en HTTPS
+
+## 🐛 Résolution de problèmes
+
+### "Cannot control device volume" ou "VOLUME_CONTROL_DISALLOW"
+
+Cette erreur signifie que l'appareil actuel ne permet pas le contrôle du volume à distance.
+
+**Solution** : Utilisez l'**application desktop Spotify** (Windows/Mac/Linux) au lieu de :
+- Spotify Web Player
+- Certaines enceintes connectées
+- Certains appareils mobiles selon la configuration
+
+### "No active device"
+
+Assurez-vous qu'un appareil Spotify est actif avec de la musique en lecture.
+
+### Le microphone ne fonctionne pas
+
+Vérifiez que :
+- Votre navigateur a la permission d'accéder au microphone
+- Vous utilisez HTTPS (en production)
+- Aucune autre application n'utilise le microphone
+- Vous parlez suffisamment fort (le volume doit dépasser 0%)
+
+### Le volume reste à 0%
+
+Vérifiez que :
+- Vous autorisez bien l'accès au microphone
+- Vous parlez suffisamment fort pendant les 5 secondes
+- Votre micro fonctionne correctement
+
+### Le volume ne change pas sur Spotify
+
+Vérifiez que :
+- Vous êtes connecté avec un compte Spotify Premium
+- Vous utilisez l'application desktop Spotify
+- Un appareil est actif avec de la musique en lecture
+- Les redirections URI sont correctement configurées dans Spotify Developer Dashboard
+
+## 📝 Licence
+
+MIT
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.

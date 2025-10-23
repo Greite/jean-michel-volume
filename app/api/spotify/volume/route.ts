@@ -1,21 +1,22 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
 
-  console.log("Session:", session);
-  console.log("Access Token:", session?.accessToken);
+  logger.log("Session:", session);
+  logger.log("Access Token:", session?.accessToken);
 
   if (!session?.accessToken) {
-    console.error("No access token in session");
+    logger.error("No access token in session");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const { volume } = await request.json();
-    console.log("Setting volume to:", volume);
+    logger.log("Setting volume to:", volume);
 
     // Le volume doit être entre 0 et 100
     const clampedVolume = Math.max(0, Math.min(100, Math.round(volume)));
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Spotify API error:", response.status, errorText);
+      logger.error("Spotify API error:", response.status, errorText);
 
       let errorData;
       try {
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, volume: clampedVolume });
   } catch (error) {
-    console.error("Error setting volume:", error);
+    logger.error("Error setting volume:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -93,7 +94,7 @@ export async function GET() {
       device: data.device?.name,
     });
   } catch (error) {
-    console.error("Error getting playback state:", error);
+    logger.error("Error getting playback state:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

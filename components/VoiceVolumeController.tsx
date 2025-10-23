@@ -2,6 +2,7 @@
 
 import { useVoiceVolume } from "@/hooks/useVoiceVolume";
 import { useEffect, useState } from "react";
+import { clientLogger } from "@/lib/client-logger";
 
 export function VoiceVolumeController() {
   const {
@@ -41,7 +42,7 @@ export function VoiceVolumeController() {
             setLastMaxVolume(maxVolume);
           } else {
             const errorData = await response.json();
-            console.error("Spotify API error:", errorData);
+            clientLogger.error("Spotify API error:", errorData);
 
             // Vérifier si c'est une erreur de contrôle du volume
             if (errorData.details?.error?.reason === "VOLUME_CONTROL_DISALLOW") {
@@ -61,7 +62,7 @@ export function VoiceVolumeController() {
             }
           }
         } catch (error) {
-          console.error("Error updating Spotify volume:", error);
+          clientLogger.error("Error updating Spotify volume:", error);
           setApiError("Erreur de connexion à l'API Spotify");
         }
       };
@@ -84,7 +85,7 @@ export function VoiceVolumeController() {
           setSpotifyVolume(data.volume);
         }
       } catch (error) {
-        console.error("Error fetching playback state:", error);
+        clientLogger.error("Error fetching playback state:", error);
       }
     };
 

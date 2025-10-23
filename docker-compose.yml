@@ -15,6 +15,10 @@ services:
       - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
       - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
 
+      # Debug Mode
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+      - NEXT_PUBLIC_DEBUG_MODE=${NEXT_PUBLIC_DEBUG_MODE:-false}
+
       # Node Environment
       - NODE_ENV=production
     restart: unless-stopped

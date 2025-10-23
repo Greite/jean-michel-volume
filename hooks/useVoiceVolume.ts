@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { clientLogger } from "@/lib/client-logger";
 
 const RECORDING_DURATION = 5000; // 5 secondes en millisecondes
 
@@ -98,7 +99,7 @@ export function useVoiceVolume() {
 
       updateVolume();
     } catch (err) {
-      console.error("Error accessing microphone:", err);
+      clientLogger.error("Error accessing microphone:", err);
       setError(
         "Impossible d'accéder au microphone. Veuillez autoriser l'accès."
       );

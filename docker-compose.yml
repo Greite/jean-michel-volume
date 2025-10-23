@@ -1,8 +1,13 @@
 services:
   jean-michel-volume:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Option 1: Utiliser l'image pré-buildée depuis GHCR (recommandé)
+    image: ghcr.io/greite/jean-michel-volume:latest
+
+    # Option 2: Builder localement (commentez la ligne 'image' ci-dessus et décommentez ci-dessous)
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+
     container_name: jean-michel-volume
     ports:
       - "3000:3000"

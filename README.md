@@ -77,6 +77,29 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 ## 🐳 Installation avec Docker
 
+### Option 0 : Utiliser l'image pré-buildée depuis GitHub Container Registry
+
+L'image Docker est automatiquement buildée et publiée sur GHCR à chaque commit.
+
+```bash
+# Pull de l'image (publique)
+docker pull ghcr.io/greite/jean-michel-volume:latest
+
+# Ou utiliser docker-compose avec l'image
+```
+
+Créez un fichier `.env` puis lancez :
+
+```bash
+docker run -d \
+  -p 3000:3000 \
+  --env-file .env \
+  --name jean-michel-volume \
+  ghcr.io/greite/jean-michel-volume:latest
+```
+
+Pour plus de détails sur le déploiement, consultez [DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ### Option 1 : Docker Compose (recommandé)
 
 1. **Créez un fichier `.env`** à la racine du projet :

@@ -118,16 +118,31 @@ export function VoiceVolumeController() {
             <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white">
               Volume actuel
             </h3>
-            <span className="text-xl sm:text-2xl font-bold text-[#1DB954]">
-              {Math.round(currentVolume)}%
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xl sm:text-2xl font-bold text-[#1DB954]">
+                {Math.round(currentVolume)}%
+              </span>
+              <span className="text-sm sm:text-base text-gray-400">
+                Pic: {Math.round(maxVolume)}%
+              </span>
+            </div>
           </div>
 
           <div className="relative h-8 bg-[#181818] rounded-full overflow-hidden border border-gray-800">
+            {/* Barre de volume actuel */}
             <div
               className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] transition-all duration-100 ease-out"
               style={{ width: `${currentVolume}%` }}
             />
+
+            {/* Indicateur du pic maximum */}
+            {maxVolume > 0 && (
+              <div
+                className="absolute top-0 h-full w-1 bg-yellow-400 shadow-lg shadow-yellow-400/50 transition-all duration-200"
+                style={{ left: `${maxVolume}%` }}
+              />
+            )}
+
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex space-x-1">
                 {[...Array(20)].map((_, i) => (

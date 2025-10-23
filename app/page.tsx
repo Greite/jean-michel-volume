@@ -89,7 +89,7 @@ export default async function Home() {
 
             {/* Note technique */}
             <div className="bg-[#181818] border border-[#1DB954]/30 rounded-lg p-3 sm:p-4 text-xs sm:text-sm text-gray-300">
-              <p className="font-semibold mb-2 text-[#1DB954]">⚠️ Notes importantes :</p>
+              <p className="font-semibold mb-2 text-[#1DB954]">⚠️&nbsp;&nbsp;Notes importantes :</p>
               <ul className="space-y-1.5 sm:space-y-2 list-disc list-inside">
                 <li>
                   Vous devez avoir un <strong>compte Spotify Premium</strong>

@@ -3,6 +3,7 @@
 import { useVoiceVolume } from "@/hooks/useVoiceVolume";
 import { useEffect, useState } from "react";
 import { clientLogger } from "@/lib/client-logger";
+import { signOut } from "next-auth/react";
 
 export function VoiceVolumeController() {
   const {
@@ -41,6 +42,17 @@ export function VoiceVolumeController() {
             setSpotifyVolume(data.volume);
             setLastMaxVolume(maxVolume);
           } else {
+            // Si erreur 401, le token a expiré et n'a pas pu être rafraîchi
+            // Déconnecter l'utilisateur
+            if (response.status === 401) {
+              clientLogger.error("Token expired, signing out...");
+              setApiError("Session expirée. Reconnexion en cours...");
+              setTimeout(() => {
+                signOut({ callbackUrl: "/" });
+              }, 2000);
+              return;
+            }
+
             const errorData = await response.json();
             clientLogger.error("Spotify API error:", errorData);
 
@@ -83,6 +95,13 @@ export function VoiceVolumeController() {
             isPlaying: data.isPlaying,
           });
           setSpotifyVolume(data.volume);
+        } else if (response.status === 401) {
+          // Token expiré, déconnecter l'utilisateur
+          clientLogger.error("Token expired, signing out...");
+          setApiError("Session expirée. Reconnexion en cours...");
+          setTimeout(() => {
+            signOut({ callbackUrl: "/" });
+          }, 2000);
         }
       } catch (error) {
         clientLogger.error("Error fetching playback state:", error);

@@ -13,8 +13,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jean-Michel Volume",
-  description: "Contrôlez le volume de Spotify avec votre voix",
+  title: {
+    default: "Jean-Michel Volume",
+    template: "%s | Jean-Michel Volume",
+  },
+  description: "Contrôlez le volume de Spotify avec votre voix en temps réel. Enregistrez pendant 5 secondes et le volume s'ajustera automatiquement.",
+  keywords: [
+    "Spotify",
+    "contrôle vocal",
+    "volume",
+    "voice control",
+    "Jean-Michel Volume",
+    "microphone",
+    "audio",
+  ],
+  authors: [{ name: "Jean-Michel Volume Team" }],
+  creator: "Jean-Michel Volume",
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    title: "Jean-Michel Volume",
+    description: "Contrôlez le volume de Spotify avec votre voix",
+    siteName: "Jean-Michel Volume",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Jean-Michel Volume",
+    description: "Contrôlez le volume de Spotify avec votre voix",
+  },
+  icons: {
+    icon: [
+      { url: "/icon.webp", type: "image/webp" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -23,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

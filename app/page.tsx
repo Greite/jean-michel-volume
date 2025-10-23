@@ -3,17 +3,25 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { VoiceVolumeController } from "@/components/VoiceVolumeController";
 import { SignInButton } from "@/components/SignInButton";
 import { SignOutButton } from "@/components/SignOutButton";
+import { Footer } from "@/components/Footer";
+import Image from "next/image";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#191414] via-[#282828] to-black">
+    <div className="min-h-screen bg-gradient-to-br from-[#191414] via-[#282828] to-black flex flex-col">
       {/* Header */}
       <header className="border-b border-gray-800 bg-[#191414]/80 backdrop-blur-sm">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="text-2xl sm:text-3xl flex-shrink-0">👷‍♂️</div>
+            <Image
+              src="/icon.webp"
+              alt="Jean-Michel Volume"
+              width={40}
+              height={40}
+              className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg"
+            />
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[#1DB954] truncate">
               Jean-Michel Volume
             </h1>
@@ -26,7 +34,7 @@ export default async function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12">
+      <main className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12 flex-1">
         {session ? (
           <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
             {/* Carte principale */}
@@ -114,6 +122,9 @@ export default async function Home() {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

@@ -75,16 +75,21 @@ export function useVoiceVolume() {
 
         analyserRef.current.getByteFrequencyData(dataArray);
 
-        // Calculer le volume maximum (au lieu de la moyenne)
-        let max = 0;
-        for (let i = 0; i < bufferLength; i++) {
-          if (dataArray[i] > max) {
-            max = dataArray[i];
-          }
+        // Trier les valeurs et prendre la moyenne des 20% valeurs les plus hautes
+        // Évite qu'un seul pic isolé fasse tout monter à 100%
+        const sortedArray = Array.from(dataArray).sort((a, b) => b - a);
+        const topPercentCount = Math.floor(bufferLength * 0.2); // 20% des valeurs
+        let sum = 0;
+        for (let i = 0; i < topPercentCount; i++) {
+          sum += sortedArray[i];
         }
+        const averageOfTop = sum / topPercentCount;
 
-        // Normaliser entre 0 et 100 avec une sensibilité plus élevée
-        const normalizedVolume = Math.min(100, (max / 255) * 100);
+        // Appliquer une courbe exponentielle stricte pour réduire la sensibilité
+        // Il faut vraiment crier fort pour atteindre 100%
+        const normalized = averageOfTop / 255; // 0-1
+        const exponentialCurve = Math.pow(normalized, 4); // Courbe exponentielle puissance 4
+        const normalizedVolume = Math.min(100, exponentialCurve * 100 * 2.5); // Facteur 2.5 pour compenser
 
         setCurrentVolume(normalizedVolume);
 

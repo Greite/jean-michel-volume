@@ -94,17 +94,17 @@ export function VoiceVolumeController() {
   }, []);
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-6">
+    <div className="w-full max-w-md mx-auto space-y-4 sm:space-y-6">
       {/* Compte à rebours pendant l'enregistrement */}
       {isRecording && (
-        <div className="flex flex-col items-center justify-center py-8">
+        <div className="flex flex-col items-center justify-center py-6 sm:py-8">
           <div className="relative">
-            <div className="text-8xl font-bold text-[#1DB954] animate-pulse">
+            <div className="text-6xl sm:text-7xl md:text-8xl font-bold text-[#1DB954] animate-pulse">
               {countdown}
             </div>
-            <div className="absolute -inset-4 border-4 border-[#1DB954] rounded-full animate-ping opacity-20" />
+            <div className="absolute -inset-3 sm:-inset-4 border-4 border-[#1DB954] rounded-full animate-ping opacity-20" />
           </div>
-          <p className="text-gray-400 mt-4 text-lg">
+          <p className="text-gray-400 mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-center px-4">
             Enregistrement en cours... Faites du bruit !
           </p>
         </div>
@@ -112,10 +112,12 @@ export function VoiceVolumeController() {
 
       {/* Visualisation du volume actuel pendant l'enregistrement */}
       {isRecording && (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-white">Volume actuel</h3>
-            <span className="text-2xl font-bold text-[#1DB954]">
+            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white">
+              Volume actuel
+            </h3>
+            <span className="text-xl sm:text-2xl font-bold text-[#1DB954]">
               {Math.round(currentVolume)}%
             </span>
           </div>
@@ -145,12 +147,12 @@ export function VoiceVolumeController() {
 
       {/* Volume maximum enregistré */}
       {!isRecording && maxVolume > 0 && (
-        <div className="space-y-3 bg-[#181818] rounded-xl p-4 border border-[#1DB954]/30">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-[#1DB954]">
-              🎤 Volume maximum enregistré
+        <div className="space-y-2 sm:space-y-3 bg-[#181818] rounded-xl p-3 sm:p-4 border border-[#1DB954]/30">
+          <div className="flex justify-between items-center gap-2">
+            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-[#1DB954]">
+              🎤 Volume max enregistré
             </h3>
-            <span className="text-2xl font-bold text-[#1DB954]">
+            <span className="text-xl sm:text-2xl font-bold text-[#1DB954]">
               {Math.round(lastMaxVolume)}%
             </span>
           </div>
@@ -164,10 +166,12 @@ export function VoiceVolumeController() {
       )}
 
       {/* Visualisation du volume Spotify */}
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-white">Volume Spotify</h3>
-          <span className="text-2xl font-bold text-[#1DB954]">
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white">
+            Volume Spotify
+          </h3>
+          <span className="text-xl sm:text-2xl font-bold text-[#1DB954]">
             {Math.round(spotifyVolume)}%
           </span>
         </div>
@@ -180,8 +184,10 @@ export function VoiceVolumeController() {
         </div>
 
         {deviceInfo.device && (
-          <div className="flex items-center justify-between text-sm text-gray-400">
-            <span>Appareil: {deviceInfo.device}</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-2 text-xs sm:text-sm text-gray-400">
+            <span className="truncate max-w-full sm:max-w-[60%]">
+              Appareil: {deviceInfo.device}
+            </span>
             <span className="flex items-center gap-2">
               <div
                 className={`w-2 h-2 rounded-full ${
@@ -198,7 +204,7 @@ export function VoiceVolumeController() {
       <button
         onClick={startRecording}
         disabled={isRecording}
-        className={`w-full py-4 px-6 rounded-full font-bold transition-all duration-200 transform ${
+        className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-full font-bold transition-all duration-200 transform text-sm sm:text-base ${
           isRecording
             ? "bg-gray-600 cursor-not-allowed"
             : "bg-[#1DB954] hover:bg-[#1ed760] hover:scale-105 active:scale-95 shadow-lg shadow-[#1DB954]/50"
@@ -206,24 +212,28 @@ export function VoiceVolumeController() {
       >
         {isRecording ? (
           <span className="flex items-center justify-center gap-2">
-            <span className="w-3 h-3 bg-black rounded-full animate-pulse" />
-            Enregistrement...
+            <span className="w-2 h-2 sm:w-3 sm:h-3 bg-black rounded-full animate-pulse" />
+            <span className="hidden sm:inline">Enregistrement...</span>
+            <span className="sm:hidden">En cours...</span>
           </span>
         ) : (
-          <span>🎤 Démarrer l&apos;enregistrement (5 sec)</span>
+          <>
+            <span className="hidden sm:inline">🎤 Démarrer l&apos;enregistrement (5 sec)</span>
+            <span className="sm:hidden">🎤 Enregistrer (5 sec)</span>
+          </>
         )}
       </button>
 
       {/* Messages d'erreur */}
       {error && (
-        <div className="p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-400 text-sm">
+        <div className="p-3 sm:p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-400 text-xs sm:text-sm">
           {error}
         </div>
       )}
 
       {/* Erreur API Spotify */}
       {apiError && (
-        <div className="p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg text-yellow-400 text-sm">
+        <div className="p-3 sm:p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg text-yellow-400 text-xs sm:text-sm">
           <p className="font-semibold mb-1">⚠️ Erreur Spotify</p>
           <p>{apiError}</p>
         </div>

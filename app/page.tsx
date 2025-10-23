@@ -11,29 +11,31 @@ export default async function Home() {
     <div className="min-h-screen bg-gradient-to-br from-[#191414] via-[#282828] to-black">
       {/* Header */}
       <header className="border-b border-gray-800 bg-[#191414]/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="text-3xl">👷‍♂️</div>
-            <h1 className="text-2xl font-bold text-[#1DB954]">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="text-2xl sm:text-3xl flex-shrink-0">👷‍♂️</div>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[#1DB954] truncate">
               Jean-Michel Volume
             </h1>
           </div>
 
-          {session ? <SignOutButton /> : <SignInButton />}
+          <div className="flex-shrink-0">
+            {session ? <SignOutButton /> : <SignInButton />}
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12">
         {session ? (
-          <div className="max-w-2xl mx-auto space-y-8">
+          <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
             {/* Carte principale */}
-            <div className="bg-[#282828] rounded-2xl shadow-xl p-8 border border-gray-800">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-white mb-2">
+            <div className="bg-[#282828] rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-800">
+              <div className="text-center mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">
                   Contrôlez Spotify avec votre voix
                 </h2>
-                <p className="text-gray-400">
+                <p className="text-sm sm:text-base text-gray-400">
                   Enregistrez pendant 5 secondes et le volume s&apos;ajustera au pic maximum
                 </p>
               </div>
@@ -42,12 +44,12 @@ export default async function Home() {
             </div>
 
             {/* Instructions */}
-            <div className="bg-[#181818] rounded-xl p-6 border border-gray-800">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <div className="bg-[#181818] rounded-xl p-4 sm:p-6 border border-gray-800">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
                 <span>💡</span>
                 Comment ça marche ?
               </h3>
-              <ul className="space-y-2 text-gray-300">
+              <ul className="space-y-2 text-sm sm:text-base text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="text-[#1DB954] font-bold">1.</span>
                   <span>
@@ -78,9 +80,9 @@ export default async function Home() {
             </div>
 
             {/* Note technique */}
-            <div className="bg-[#181818] border border-[#1DB954]/30 rounded-lg p-4 text-sm text-gray-300">
+            <div className="bg-[#181818] border border-[#1DB954]/30 rounded-lg p-3 sm:p-4 text-xs sm:text-sm text-gray-300">
               <p className="font-semibold mb-2 text-[#1DB954]">⚠️ Notes importantes :</p>
-              <ul className="space-y-2 list-disc list-inside">
+              <ul className="space-y-1.5 sm:space-y-2 list-disc list-inside">
                 <li>
                   Vous devez avoir un <strong>compte Spotify Premium</strong>
                 </li>
@@ -98,12 +100,12 @@ export default async function Home() {
           </div>
         ) : (
           <div className="max-w-md mx-auto text-center">
-            <div className="bg-[#282828] rounded-2xl shadow-xl p-12 border border-gray-800">
-              <div className="text-6xl mb-6">🎤</div>
-              <h2 className="text-2xl font-bold text-white mb-4">
+            <div className="bg-[#282828] rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8 md:p-12 border border-gray-800">
+              <div className="text-5xl sm:text-6xl mb-4 sm:mb-6">🎤</div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">
                 Bienvenue sur Jean-Michel Volume !
               </h2>
-              <p className="text-gray-300 mb-8">
+              <p className="text-sm sm:text-base text-gray-300 mb-6 sm:mb-8">
                 Connectez-vous avec Spotify pour commencer à contrôler le volume
                 avec votre voix
               </p>

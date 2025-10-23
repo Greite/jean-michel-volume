@@ -6,9 +6,10 @@ export function SignInButton() {
   return (
     <button
       onClick={() => signIn("spotify", { callbackUrl: "/" })}
-      className="px-6 py-2 bg-[#1DB954] hover:bg-[#1ed760] text-black rounded-full font-bold transition-all shadow-lg shadow-[#1DB954]/50"
+      className="px-3 sm:px-6 py-2 bg-[#1DB954] hover:bg-[#1ed760] text-black rounded-full font-bold transition-all shadow-lg shadow-[#1DB954]/50 text-xs sm:text-sm md:text-base whitespace-nowrap"
     >
-      Se connecter avec Spotify
+      <span className="hidden sm:inline">Se connecter avec Spotify</span>
+      <span className="sm:hidden">Connexion</span>
     </button>
   );
 }

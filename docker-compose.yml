@@ -1,0 +1,23 @@
+services:
+  jean-michel-volume:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jean-michel-volume
+    ports:
+      - "3000:3000"
+    environment:
+      # NextAuth Configuration
+      - AUTH_SECRET=${AUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+
+      # Spotify API Configuration
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+
+      # Node Environment
+      - NODE_ENV=production
+    restart: unless-stopped
+    # Optionally use an env file
+    # env_file:
+    #   - .env.production

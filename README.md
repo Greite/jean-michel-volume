@@ -1,4 +1,4 @@
-# 🎵 Jean-Michel Volume
+# 👷‍♂️ Jean-Michel Volume
 
 Une application web moderne qui vous permet de contrôler le volume de Spotify en temps réel avec votre voix !
 
@@ -14,7 +14,8 @@ Une application web moderne qui vous permet de contrôler le volume de Spotify e
 
 ### Prérequis
 
-- Node.js 18+ et pnpm installés
+- Node.js LTS (recommandé : utilisez [nvm](https://github.com/nvm-sh/nvm))
+- pnpm installé
 - Un compte Spotify Premium (nécessaire pour l'API de contrôle de lecture)
 - Un navigateur moderne avec support du micro
 
@@ -25,13 +26,23 @@ git clone <votre-repo>
 cd spotify-volume-control
 ```
 
-### 2. Installer les dépendances
+### 2. Installer la bonne version de Node (avec nvm)
+
+Un fichier `.nvmrc` est présent pour utiliser automatiquement la version LTS :
+
+```bash
+nvm use
+# Ou si la version n'est pas installée :
+nvm install
+```
+
+### 3. Installer les dépendances
 
 ```bash
 pnpm install
 ```
 
-### 3. Configurer Spotify Developer
+### 4. Configurer Spotify Developer
 
 1. Allez sur [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Créez une nouvelle application
@@ -39,7 +50,7 @@ pnpm install
    - **Redirect URIs** : Ajoutez `http://localhost:3000/api/auth/callback/spotify`
    - Notez votre **Client ID** et **Client Secret**
 
-### 4. Configurer les variables d'environnement
+### 5. Configurer les variables d'environnement
 
 Copiez le fichier `.env.example` vers `.env.local` :
 
@@ -56,13 +67,74 @@ SPOTIFY_CLIENT_SECRET=<votre-client-secret-spotify>
 AUTH_URL=http://localhost:3000
 ```
 
-### 5. Lancer l'application
+### 6. Lancer l'application
 
 ```bash
 pnpm dev
 ```
 
 Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
+
+## 🐳 Installation avec Docker
+
+### Option 1 : Docker Compose (recommandé)
+
+1. **Créez un fichier `.env`** à la racine du projet :
+
+```env
+AUTH_SECRET=<votre-secret-généré>
+NEXTAUTH_URL=http://localhost:3000
+SPOTIFY_CLIENT_ID=<votre-client-id>
+SPOTIFY_CLIENT_SECRET=<votre-client-secret>
+```
+
+2. **Lancez l'application** :
+
+```bash
+docker-compose up -d
+```
+
+3. **Accédez à l'application** : [http://localhost:3000](http://localhost:3000)
+
+4. **Arrêter l'application** :
+
+```bash
+docker-compose down
+```
+
+### Option 2 : Docker manuel
+
+1. **Build l'image** :
+
+```bash
+docker build -t jean-michel-volume .
+```
+
+2. **Lancez le container** :
+
+```bash
+docker run -d \
+  -p 3000:3000 \
+  -e AUTH_SECRET=<votre-secret> \
+  -e NEXTAUTH_URL=http://localhost:3000 \
+  -e SPOTIFY_CLIENT_ID=<votre-client-id> \
+  -e SPOTIFY_CLIENT_SECRET=<votre-client-secret> \
+  --name jean-michel-volume \
+  jean-michel-volume
+```
+
+### Variables d'environnement Docker
+
+Toutes les variables d'environnement peuvent être configurées au runtime :
+
+| Variable | Description | Exemple |
+|----------|-------------|---------|
+| `AUTH_SECRET` | Secret pour NextAuth (généré avec `openssl rand -base64 32`) | `7mP9J/4M1NIYREuOMkJ...` |
+| `NEXTAUTH_URL` | URL de base de l'application | `http://localhost:3000` |
+| `SPOTIFY_CLIENT_ID` | Client ID de votre app Spotify | `4a1cdbadbd514e73...` |
+| `SPOTIFY_CLIENT_SECRET` | Client Secret de votre app Spotify | `3ecc6d66c05241dd...` |
+
+**Note** : En production, modifiez `NEXTAUTH_URL` pour pointer vers votre domaine (ex: `https://votre-domaine.com`)
 
 ## 📖 Comment l'utiliser
 

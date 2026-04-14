@@ -1,10 +1,10 @@
+import Image from "next/image";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { VoiceVolumeController } from "@/components/VoiceVolumeController";
+import { Footer } from "@/components/Footer";
 import { SignInButton } from "@/components/SignInButton";
 import { SignOutButton } from "@/components/SignOutButton";
-import { Footer } from "@/components/Footer";
-import Image from "next/image";
+import { VoiceVolumeController } from "@/components/VoiceVolumeController";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -44,7 +44,8 @@ export default async function Home() {
                   Contrôlez Spotify avec votre voix
                 </h2>
                 <p className="text-sm sm:text-base text-gray-400">
-                  Enregistrez pendant 5 secondes et le volume s&apos;ajustera au pic maximum
+                  Enregistrez pendant 5 secondes et le volume s&apos;ajustera au
+                  pic maximum
                 </p>
               </div>
 
@@ -81,7 +82,8 @@ export default async function Home() {
                 <li className="flex items-start gap-2">
                   <span className="text-[#1DB954] font-bold">4.</span>
                   <span>
-                    Le volume Spotify s&apos;ajustera au pic maximum de votre enregistrement
+                    Le volume Spotify s&apos;ajustera au pic maximum de votre
+                    enregistrement
                   </span>
                 </li>
               </ul>
@@ -89,19 +91,24 @@ export default async function Home() {
 
             {/* Note technique */}
             <div className="bg-[#181818] border border-[#1DB954]/30 rounded-lg p-3 sm:p-4 text-xs sm:text-sm text-gray-300">
-              <p className="font-semibold mb-2 text-[#1DB954]">⚠️&nbsp;&nbsp;Notes importantes :</p>
+              <p className="font-semibold mb-2 text-[#1DB954]">
+                ⚠️&nbsp;&nbsp;Notes importantes :
+              </p>
               <ul className="space-y-1.5 sm:space-y-2 list-disc list-inside">
                 <li>
                   Vous devez avoir un <strong>compte Spotify Premium</strong>
                 </li>
                 <li>
-                  Utilisez l&apos;<strong>application desktop Spotify</strong> (Windows/Mac/Linux)
+                  Utilisez l&apos;<strong>application desktop Spotify</strong>{" "}
+                  (Windows/Mac/Linux)
                 </li>
                 <li>
-                  Le <strong>Web Player</strong> et certaines enceintes ne permettent pas le contrôle du volume
+                  Le <strong>Web Player</strong> et certaines enceintes ne
+                  permettent pas le contrôle du volume
                 </li>
                 <li>
-                  La musique doit être <strong>en lecture</strong> sur l&apos;appareil
+                  La musique doit être <strong>en lecture</strong> sur
+                  l&apos;appareil
                 </li>
               </ul>
             </div>

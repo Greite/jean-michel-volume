@@ -1,6 +1,6 @@
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
@@ -28,14 +28,14 @@ export async function POST(request: Request) {
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
         },
-      }
+      },
     );
 
     if (!response.ok) {
       const errorText = await response.text();
       logger.error("Spotify API error:", response.status, errorText);
 
-      let errorData;
+      let errorData: Record<string, unknown>;
       try {
         errorData = JSON.parse(errorText);
       } catch {
@@ -46,9 +46,9 @@ export async function POST(request: Request) {
         {
           error: "Failed to set volume",
           details: errorData,
-          status: response.status
+          status: response.status,
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     logger.error("Error setting volume:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -83,7 +83,7 @@ export async function GET() {
     if (!response.ok) {
       return NextResponse.json(
         { error: "Failed to get playback state" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -97,7 +97,7 @@ export async function GET() {
     logger.error("Error getting playback state:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

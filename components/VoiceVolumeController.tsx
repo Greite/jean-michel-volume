@@ -1,9 +1,9 @@
 "use client";
 
-import { useVoiceVolume } from "@/hooks/useVoiceVolume";
-import { useEffect, useState } from "react";
-import { clientLogger } from "@/lib/client-logger";
 import { signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { useVoiceVolume } from "@/hooks/useVoiceVolume";
+import { clientLogger } from "@/lib/client-logger";
 
 export function VoiceVolumeController() {
   const {
@@ -57,19 +57,23 @@ export function VoiceVolumeController() {
             clientLogger.error("Spotify API error:", errorData);
 
             // Vérifier si c'est une erreur de contrôle du volume
-            if (errorData.details?.error?.reason === "VOLUME_CONTROL_DISALLOW") {
+            if (
+              errorData.details?.error?.reason === "VOLUME_CONTROL_DISALLOW"
+            ) {
               setApiError(
-                "❌ Contrôle du volume impossible sur cet appareil. Veuillez utiliser l'application desktop Spotify (Windows/Mac/Linux) au lieu du Web Player ou d'une enceinte connectée."
+                "❌ Contrôle du volume impossible sur cet appareil. Veuillez utiliser l'application desktop Spotify (Windows/Mac/Linux) au lieu du Web Player ou d'une enceinte connectée.",
               );
             } else if (response.status === 403) {
               setApiError(
-                "Erreur 403: Assurez-vous d'avoir un appareil Spotify actif avec de la musique en lecture, et que vous avez un compte Spotify Premium."
+                "Erreur 403: Assurez-vous d'avoir un appareil Spotify actif avec de la musique en lecture, et que vous avez un compte Spotify Premium.",
               );
             } else if (response.status === 404) {
-              setApiError("Aucun appareil Spotify actif trouvé. Lancez Spotify sur un appareil.");
+              setApiError(
+                "Aucun appareil Spotify actif trouvé. Lancez Spotify sur un appareil.",
+              );
             } else {
               setApiError(
-                `Erreur ${response.status}: ${errorData.error || "Impossible de modifier le volume"}`
+                `Erreur ${response.status}: ${errorData.error || "Impossible de modifier le volume"}`,
               );
             }
           }
@@ -166,6 +170,7 @@ export function VoiceVolumeController() {
               <div className="flex space-x-1">
                 {[...Array(20)].map((_, i) => (
                   <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static array, never reordered
                     key={i}
                     className={`w-1 rounded-full transition-all duration-75 ${
                       i < (currentVolume / 100) * 20
@@ -237,6 +242,7 @@ export function VoiceVolumeController() {
 
       {/* Bouton d'enregistrement */}
       <button
+        type="button"
         onClick={startRecording}
         disabled={isRecording}
         className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-full font-bold transition-all duration-200 transform text-sm sm:text-base ${
@@ -253,7 +259,9 @@ export function VoiceVolumeController() {
           </span>
         ) : (
           <>
-            <span className="hidden sm:inline">🎤 Démarrer l&apos;enregistrement (5 sec)</span>
+            <span className="hidden sm:inline">
+              🎤 Démarrer l&apos;enregistrement (5 sec)
+            </span>
             <span className="sm:hidden">🎤 Enregistrer (5 sec)</span>
           </>
         )}

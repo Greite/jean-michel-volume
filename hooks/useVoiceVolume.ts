@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { clientLogger } from "@/lib/client-logger";
 
 const RECORDING_DURATION = 5000; // 5 secondes en millisecondes
@@ -35,7 +35,8 @@ export function useVoiceVolume() {
       // Créer le contexte audio
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
-      microphoneRef.current = audioContextRef.current.createMediaStreamSource(stream);
+      microphoneRef.current =
+        audioContextRef.current.createMediaStreamSource(stream);
 
       // Configurer l'analyseur
       analyserRef.current.fftSize = 256;
@@ -88,7 +89,7 @@ export function useVoiceVolume() {
         // Appliquer une courbe exponentielle stricte pour réduire la sensibilité
         // Il faut vraiment crier fort pour atteindre 100%
         const normalized = averageOfTop / 255; // 0-1
-        const exponentialCurve = Math.pow(normalized, 4); // Courbe exponentielle puissance 4
+        const exponentialCurve = normalized ** 4; // Courbe exponentielle puissance 4
         const normalizedVolume = Math.min(100, exponentialCurve * 100 * 2.5); // Facteur 2.5 pour compenser
 
         setCurrentVolume(normalizedVolume);
@@ -106,13 +107,13 @@ export function useVoiceVolume() {
     } catch (err) {
       clientLogger.error("Error accessing microphone:", err);
       setError(
-        "Impossible d'accéder au microphone. Veuillez autoriser l'accès."
+        "Impossible d'accéder au microphone. Veuillez autoriser l'accès.",
       );
       setIsRecording(false);
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = useCallback(() => {
     // Arrêter l'animation frame
     if (rafIdRef.current) {
       cancelAnimationFrame(rafIdRef.current);
@@ -127,7 +128,9 @@ export function useVoiceVolume() {
 
     // Arrêter le stream
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
       streamRef.current = null;
     }
 
@@ -143,14 +146,14 @@ export function useVoiceVolume() {
     setIsRecording(false);
     setCurrentVolume(0);
     setCountdown(5);
-  };
+  }, []);
 
   // Nettoyer lors du démontage du composant
   useEffect(() => {
     return () => {
       stopRecording();
     };
-  }, []);
+  }, [stopRecording]);
 
   return {
     currentVolume,

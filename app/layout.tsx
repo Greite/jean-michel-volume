@@ -18,7 +18,8 @@ export const metadata: Metadata = {
     default: "Jean-Michel Volume",
     template: "%s | Jean-Michel Volume",
   },
-  description: "Contrôlez le volume de Spotify avec votre voix en temps réel. Enregistrez pendant 5 secondes et le volume s'ajustera automatiquement.",
+  description:
+    "Contrôlez le volume de Spotify avec votre voix en temps réel. Enregistrez pendant 5 secondes et le volume s'ajustera automatiquement.",
   keywords: [
     "Spotify",
     "contrôle vocal",
@@ -43,9 +44,7 @@ export const metadata: Metadata = {
     description: "Contrôlez le volume de Spotify avec votre voix",
   },
   icons: {
-    icon: [
-      { url: "/icon.webp", type: "image/webp" },
-    ],
+    icon: [{ url: "/icon.webp", type: "image/webp" }],
   },
 };
 

@@ -1,26 +1,341 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* =========================================================
+   Design tokens — Jean-Michel Volume
+   Editorial meets music. Brand vert Spotify, surface crème en
+   light, charbon chaud en dark. Tokens sémantiques uniquement.
+   ========================================================= */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-fg-soft: var(--fg-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-helmet: var(--helmet);
+  --color-helmet-shade: var(--helmet-shade);
+  --color-helmet-line: var(--helmet-line);
+  --color-mascot-halo: var(--mascot-halo);
+
+  --font-display: var(--font-bricolage), ui-serif, Georgia, serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 0 0 var(--line), 0 12px 32px -16px rgba(0, 0, 0, 0.18);
+  --shadow-glow: 0 0 0 1px var(--brand-soft), 0 18px 48px -16px color-mix(in oklab, var(--brand) 55%, transparent);
+
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* Light theme — défaut */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f7f5ef;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #efece4;
+  --fg: #14110d;
+  --fg-soft: #2c2924;
+  --muted: #6e6a60;
+  --line: rgba(20, 17, 13, 0.1);
+
+  --brand: #117a3a;
+  --brand-hover: #0f6a32;
+  --brand-soft: rgba(17, 122, 58, 0.14);
+  --on-brand: #fafafa;
+
+  --warn: #8a5a00;
+  --warn-soft: rgba(138, 90, 0, 0.12);
+  --danger: #b3261e;
+  --danger-soft: rgba(179, 38, 30, 0.1);
+
+  --helmet: #ffcd11;
+  --helmet-shade: #e5b400;
+  --helmet-line: #14110d;
+  --mascot-halo: rgba(17, 122, 58, 0.22);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0c0a;
+  --bg-elevated: #131210;
+  --surface: #1a1916;
+  --surface-2: #232220;
+  --fg: #f5f1e8;
+  --fg-soft: #d4cfc1;
+  --muted: #908b7e;
+  --line: rgba(245, 241, 232, 0.1);
+
+  --brand: #1ed760;
+  --brand-hover: #2ee870;
+  --brand-soft: rgba(30, 215, 96, 0.16);
+  --on-brand: #0a1f10;
+
+  --warn: #f5b942;
+  --warn-soft: rgba(245, 185, 66, 0.14);
+  --danger: #ff6b6b;
+  --danger-soft: rgba(255, 107, 107, 0.14);
+
+  --helmet: #ffcd11;
+  --helmet-shade: #e5b400;
+  --helmet-line: #14110d;
+  --mascot-halo: rgba(30, 215, 96, 0.42);
+}
+
+/* System theme : pas d'attribut data-theme → suit prefers-color-scheme */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+    --bg: #0d0c0a;
+    --bg-elevated: #131210;
+    --surface: #1a1916;
+    --surface-2: #232220;
+    --fg: #f5f1e8;
+    --fg-soft: #d4cfc1;
+    --muted: #908b7e;
+    --line: rgba(245, 241, 232, 0.1);
+
+    --brand: #1ed760;
+    --brand-hover: #2ee870;
+    --brand-soft: rgba(30, 215, 96, 0.16);
+    --on-brand: #0a1f10;
+
+    --warn: #f5b942;
+    --warn-soft: rgba(245, 185, 66, 0.14);
+    --danger: #ff6b6b;
+    --danger-soft: rgba(255, 107, 107, 0.14);
+
+    --helmet: #ffcd11;
+    --helmet-shade: #e5b400;
+    --helmet-line: #14110d;
+    --mascot-halo: rgba(30, 215, 96, 0.42);
   }
 }
 
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "ss02", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Texture grain subtile en surcouche, contextuelle au thème */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
+}
+
+[data-theme="dark"] body::before {
+  mix-blend-mode: screen;
+  opacity: 0.06;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body::before {
+    mix-blend-mode: screen;
+    opacity: 0.06;
+  }
+}
+
+/* Focus visible : anneau brand cohérent */
+*:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Selection */
+::selection {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+/* Scrollbar discrète */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-2);
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Reduced motion : neutralise toutes les animations CSS */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =========================================================
+   Animations
+   ========================================================= */
+@keyframes jmv-fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes jmv-pulse-ring {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+@keyframes jmv-spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jmv-equalizer {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.jmv-reveal {
+  animation: jmv-fade-up 0.7s var(--ease-smooth) both;
+}
+
+.jmv-pulse-ring {
+  animation: jmv-pulse-ring 1.6s var(--ease-smooth) infinite;
+}
+
+.jmv-spin-slow {
+  animation: jmv-spin-slow 18s linear infinite;
+}
+
+/* Vignette éditoriale décorative pour le fond */
+.jmv-bg-mesh {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60% 60% at 12% -10%, color-mix(in oklab, var(--brand) 18%, transparent) 0%, transparent 70%),
+    radial-gradient(40% 40% at 110% 0%, color-mix(in oklab, var(--brand) 10%, transparent) 0%, transparent 70%),
+    radial-gradient(60% 50% at 50% 110%, color-mix(in oklab, var(--fg) 6%, transparent) 0%, transparent 70%);
+}
+
+/* Slider de volume manuel */
+.jmv-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: linear-gradient(
+    to right,
+    var(--brand) 0%,
+    var(--brand) var(--jmv-slider-value, 0%),
+    var(--surface-2) var(--jmv-slider-value, 0%),
+    var(--surface-2) 100%
+  );
+  border-radius: 999px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.jmv-slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.jmv-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--fg);
+  border: 3px solid var(--brand);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.jmv-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+.jmv-slider:focus-visible {
+  outline: none;
+}
+.jmv-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 4px var(--brand-soft),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.jmv-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--fg);
+  border: 3px solid var(--brand);
+  cursor: pointer;
+}
+.jmv-slider:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px var(--brand-soft);
+}
+
+/* Anti-FOUC pendant l'hydratation du thème */
+html.jmv-theme-loading * {
+  transition: none !important;
 }

@@ -1,39 +1,60 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { logger } from "@/lib/logger";
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { logger } from '@/lib/logger';
+import { checkRateLimit, getClientKey } from '@/lib/rate-limit';
+import { setSpotifyVolume } from '@/lib/spotify-api';
+
+type VolumeBody = { volume: number };
+
+function isVolumeBody(value: unknown): value is VolumeBody {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const v = (value as { volume?: unknown }).volume;
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100;
+}
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
 
-  logger.log("Session:", session);
-  logger.log("Access Token:", session?.accessToken);
-
   if (!session?.accessToken) {
-    logger.error("No access token in session");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const { volume } = await request.json();
-    logger.log("Setting volume to:", volume);
-
-    // Le volume doit être entre 0 et 100
-    const clampedVolume = Math.max(0, Math.min(100, Math.round(volume)));
-
-    const response = await fetch(
-      `https://api.spotify.com/v1/me/player/volume?volume_percent=${clampedVolume}`,
+  const userKey = session.user?.email ?? session.user?.name ?? 'anon';
+  const key = getClientKey(request.headers, userKey);
+  const rl = checkRateLimit(`vol:${key}`);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
       {
-        method: "PUT",
+        status: 429,
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)),
         },
       },
     );
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  if (!isVolumeBody(body)) {
+    return NextResponse.json({ error: 'Invalid body: { volume: number 0..100 }' }, { status: 400 });
+  }
+
+  try {
+    const response = await setSpotifyVolume(session.accessToken, body.volume);
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error("Spotify API error:", response.status, errorText);
+      logger.error('Spotify API error:', response.status, errorText);
 
       let errorData: Record<string, unknown>;
       try {
@@ -44,7 +65,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: "Failed to set volume",
+          error: 'Failed to set volume',
           details: errorData,
           status: response.status,
         },
@@ -52,52 +73,12 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ success: true, volume: clampedVolume });
-  } catch (error) {
-    logger.error("Error setting volume:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function GET() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.accessToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    const response = await fetch("https://api.spotify.com/v1/me/player", {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-    });
-
-    if (response.status === 204) {
-      return NextResponse.json({ error: "No active device" }, { status: 404 });
-    }
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Failed to get playback state" },
-        { status: response.status },
-      );
-    }
-
-    const data = await response.json();
     return NextResponse.json({
-      volume: data.device?.volume_percent || 0,
-      isPlaying: data.is_playing,
-      device: data.device?.name,
+      success: true,
+      volume: Math.max(0, Math.min(100, Math.round(body.volume))),
     });
   } catch (error) {
-    logger.error("Error getting playback state:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    logger.error('Error setting volume:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

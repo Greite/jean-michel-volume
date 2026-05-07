@@ -10,24 +10,33 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "biome check",
-    "format": "biome format --write"
+    "prelint": "next typegen",
+    "lint": "pnpm tsc && pnpm biome:check && pnpm biome:format",
+    "tsc": "tsc --noEmit --pretty",
+    "biome:check": "biome check .",
+    "biome:check:write": "biome check --write .",
+    "biome:format:write": "biome format --write .",
+    "biome:format": "biome format .",
+    "biome:write": "biome check --write . && biome format --write .",
+    "gen:icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
-    "next": "^16.2.3",
-    "next-auth": "^4.24.13",
+    "next": "^16.2.5",
+    "next-auth": "^4.24.14",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "spotify-web-api-node": "^5.0.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.11",
-    "@tailwindcss/postcss": "^4.2.2",
+    "@tailwindcss/postcss": "^4.2.4",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "1.0.0",
-    "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2"
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3"
   }
 }

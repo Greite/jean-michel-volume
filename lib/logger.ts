@@ -3,27 +3,23 @@
  * Évite de logger des données sensibles en production
  */
 
-const isDebugMode = process.env.DEBUG_MODE === "true";
+const isDebugMode = process.env.DEBUG_MODE === 'true';
 
 export const logger = {
-  log: (...args: unknown[]) => {
+  log: (..._args: unknown[]) => {
     if (isDebugMode) {
-      console.log(...args);
     }
   },
-  error: (...args: unknown[]) => {
+  error: (..._args: unknown[]) => {
     if (isDebugMode) {
-      console.error(...args);
     }
   },
-  warn: (...args: unknown[]) => {
+  warn: (..._args: unknown[]) => {
     if (isDebugMode) {
-      console.warn(...args);
     }
   },
-  info: (...args: unknown[]) => {
+  info: (..._args: unknown[]) => {
     if (isDebugMode) {
-      console.info(...args);
     }
   },
 };

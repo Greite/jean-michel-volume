@@ -1,16 +1,44 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { clientLogger } from "@/lib/client-logger";
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-const RECORDING_DURATION = 5000; // 5 secondes en millisecondes
+import { clientLogger } from '@/lib/client-logger';
+import {
+  FFT_SIZE,
+  FFT_TOP_PERCENT,
+  RECORDING_DURATIONS_MS,
+  type RecordingDurationKey,
+  SENSITIVITY_PRESETS,
+  type SensitivityKey,
+  VOLUME_UI_THROTTLE_MS,
+} from '@/lib/constants';
 
-export function useVoiceVolume() {
+type WakeLockSentinel = {
+  release: () => Promise<void>;
+};
+
+type WakeLockNavigator = Navigator & {
+  wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinel> };
+};
+
+type UseVoiceVolumeOptions = {
+  durationKey?: RecordingDurationKey;
+  sensitivityKey?: SensitivityKey;
+  onPeak?: (peak: number) => void;
+  onComplete?: (peak: number) => void;
+  hapticFeedback?: boolean;
+};
+
+export function useVoiceVolume(options: UseVoiceVolumeOptions = {}) {
+  const { durationKey = 'default', sensitivityKey = 'medium', onPeak, onComplete, hapticFeedback = true } = options;
+
   const [currentVolume, setCurrentVolume] = useState(0);
   const [maxVolume, setMaxVolume] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(5);
+  const [countdownMs, setCountdownMs] = useState<number>(RECORDING_DURATIONS_MS[durationKey]);
+  // Données FFT live pour spectrogramme — Float32 0..1, taille = FFT_SIZE/2
+  const [spectrum, setSpectrum] = useState<Float32Array>(() => new Float32Array(FFT_SIZE / 2));
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -19,148 +47,212 @@ export function useVoiceVolume() {
   const rafIdRef = useRef<number | null>(null);
   const maxVolumeRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastUiUpdateRef = useRef(0);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const stopRequestedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  const onPeakRef = useRef(onPeak);
+  // Double-buffer pour éviter d'allouer un Float32Array à chaque tick (~30fps).
+  const spectrumBuffersRef = useRef<[Float32Array, Float32Array]>([
+    new Float32Array(FFT_SIZE / 2),
+    new Float32Array(FFT_SIZE / 2),
+  ]);
+  const spectrumBufferIndexRef = useRef(0);
 
-  const startRecording = async () => {
-    try {
-      setError(null);
-      setMaxVolume(0);
-      maxVolumeRef.current = 0;
-      setCountdown(5);
+  // Garde les callbacks à jour sans relancer l'enregistrement
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+  useEffect(() => {
+    onPeakRef.current = onPeak;
+  }, [onPeak]);
 
-      // Demander l'accès au microphone
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-
-      // Créer le contexte audio
-      audioContextRef.current = new AudioContext();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      microphoneRef.current =
-        audioContextRef.current.createMediaStreamSource(stream);
-
-      // Configurer l'analyseur
-      analyserRef.current.fftSize = 256;
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      // Connecter le micro à l'analyseur
-      microphoneRef.current.connect(analyserRef.current);
-
-      setIsRecording(true);
-      startTimeRef.current = Date.now();
-
-      // Compte à rebours
-      countdownIntervalRef.current = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            if (countdownIntervalRef.current) {
-              clearInterval(countdownIntervalRef.current);
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      // Fonction pour analyser le volume en temps réel
-      const updateVolume = () => {
-        if (!analyserRef.current || !startTimeRef.current) return;
-
-        const elapsed = Date.now() - startTimeRef.current;
-
-        // Arrêter après 5 secondes
-        if (elapsed >= RECORDING_DURATION) {
-          stopRecording();
-          return;
+  const tryHaptic = useCallback(
+    (pattern: number | number[]) => {
+      if (!hapticFeedback) {
+        return;
+      }
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(pattern);
+        } catch {
+          /* noop */
         }
+      }
+    },
+    [hapticFeedback],
+  );
 
-        analyserRef.current.getByteFrequencyData(dataArray);
-
-        // Trier les valeurs et prendre la moyenne des 20% valeurs les plus hautes
-        // Évite qu'un seul pic isolé fasse tout monter à 100%
-        const sortedArray = Array.from(dataArray).sort((a, b) => b - a);
-        const topPercentCount = Math.floor(bufferLength * 0.2); // 20% des valeurs
-        let sum = 0;
-        for (let i = 0; i < topPercentCount; i++) {
-          sum += sortedArray[i];
-        }
-        const averageOfTop = sum / topPercentCount;
-
-        // Appliquer une courbe exponentielle stricte pour réduire la sensibilité
-        // Il faut vraiment crier fort pour atteindre 100%
-        const normalized = averageOfTop / 255; // 0-1
-        const exponentialCurve = normalized ** 4; // Courbe exponentielle puissance 4
-        const normalizedVolume = Math.min(100, exponentialCurve * 100 * 2.5); // Facteur 2.5 pour compenser
-
-        setCurrentVolume(normalizedVolume);
-
-        // Mettre à jour le volume maximum
-        if (normalizedVolume > maxVolumeRef.current) {
-          maxVolumeRef.current = normalizedVolume;
-          setMaxVolume(normalizedVolume);
-        }
-
-        rafIdRef.current = requestAnimationFrame(updateVolume);
-      };
-
-      updateVolume();
-    } catch (err) {
-      clientLogger.error("Error accessing microphone:", err);
-      setError(
-        "Impossible d'accéder au microphone. Veuillez autoriser l'accès.",
-      );
-      setIsRecording(false);
+  const acquireWakeLock = useCallback(async () => {
+    const nav = navigator as WakeLockNavigator;
+    if (!nav.wakeLock) {
+      return;
     }
-  };
+    try {
+      wakeLockRef.current = await nav.wakeLock.request('screen');
+    } catch (err) {
+      clientLogger.warn('WakeLock failed:', err);
+    }
+  }, []);
 
-  const stopRecording = useCallback(() => {
-    // Arrêter l'animation frame
+  const releaseWakeLock = useCallback(async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+      } catch {
+        /* noop */
+      }
+      wakeLockRef.current = null;
+    }
+  }, []);
+
+  const cleanup = useCallback(() => {
     if (rafIdRef.current) {
       cancelAnimationFrame(rafIdRef.current);
       rafIdRef.current = null;
     }
-
-    // Arrêter le compte à rebours
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-      countdownIntervalRef.current = null;
-    }
-
-    // Arrêter le stream
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => {
+      for (const track of streamRef.current.getTracks()) {
         track.stop();
-      });
+      }
       streamRef.current = null;
     }
-
-    // Fermer le contexte audio
     if (audioContextRef.current) {
-      audioContextRef.current.close();
+      audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
     }
-
     microphoneRef.current = null;
     analyserRef.current = null;
     startTimeRef.current = null;
+    releaseWakeLock();
+  }, [releaseWakeLock]);
+
+  const stopRecording = useCallback(() => {
+    stopRequestedRef.current = true;
+    cleanup();
     setIsRecording(false);
     setCurrentVolume(0);
-    setCountdown(5);
-  }, []);
+    setCountdownMs(RECORDING_DURATIONS_MS[durationKey]);
+    setSpectrum(new Float32Array(FFT_SIZE / 2));
+    onCompleteRef.current?.(maxVolumeRef.current);
+    tryHaptic([8, 60, 8]);
+  }, [cleanup, durationKey, tryHaptic]);
 
-  // Nettoyer lors du démontage du composant
+  const startRecording = useCallback(async () => {
+    try {
+      stopRequestedRef.current = false;
+      setError(null);
+      setMaxVolume(0);
+      maxVolumeRef.current = 0;
+      const totalMs = RECORDING_DURATIONS_MS[durationKey];
+      setCountdownMs(totalMs);
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
+      streamRef.current = stream;
+
+      const ctx = new AudioContext();
+      audioContextRef.current = ctx;
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = FFT_SIZE;
+      analyserRef.current = analyser;
+      const mic = ctx.createMediaStreamSource(stream);
+      microphoneRef.current = mic;
+      mic.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      const sortedArr = new Array<number>(bufferLength);
+      const topCount = Math.max(1, Math.floor(bufferLength * FFT_TOP_PERCENT));
+      const preset = SENSITIVITY_PRESETS[sensitivityKey];
+
+      setIsRecording(true);
+      startTimeRef.current = performance.now();
+      lastUiUpdateRef.current = 0;
+      acquireWakeLock();
+      tryHaptic(20);
+
+      const loop = () => {
+        if (!analyserRef.current || !startTimeRef.current || stopRequestedRef.current) {
+          return;
+        }
+        const elapsed = performance.now() - startTimeRef.current;
+        const remaining = Math.max(0, totalMs - elapsed);
+
+        if (elapsed >= totalMs) {
+          stopRecording();
+          return;
+        }
+
+        analyser.getByteFrequencyData(dataArray);
+
+        for (let i = 0; i < bufferLength; i++) {
+          sortedArr[i] = dataArray[i];
+        }
+        sortedArr.sort((a, b) => b - a);
+        let sum = 0;
+        for (let i = 0; i < topCount; i++) {
+          sum += sortedArr[i];
+        }
+        const avg = sum / topCount / 255;
+        const shaped = Math.min(100, avg ** preset.exponent * 100 * preset.multiplier);
+
+        if (shaped > maxVolumeRef.current) {
+          maxVolumeRef.current = shaped;
+          onPeakRef.current?.(shaped);
+        }
+
+        // Throttle des setState à ~30fps
+        const now = performance.now();
+        if (now - lastUiUpdateRef.current >= VOLUME_UI_THROTTLE_MS) {
+          lastUiUpdateRef.current = now;
+          setCurrentVolume(shaped);
+          setMaxVolume(maxVolumeRef.current);
+          setCountdownMs(remaining);
+
+          // Spectre : on alterne deux buffers réutilisés pour éviter les allocations.
+          const idx = (spectrumBufferIndexRef.current + 1) % 2;
+          spectrumBufferIndexRef.current = idx;
+          const buf = spectrumBuffersRef.current[idx];
+          const len = Math.min(buf.length, bufferLength);
+          for (let i = 0; i < len; i++) {
+            buf[i] = dataArray[i] / 255;
+          }
+          setSpectrum(buf);
+        }
+
+        rafIdRef.current = requestAnimationFrame(loop);
+      };
+
+      loop();
+    } catch (err) {
+      clientLogger.error('Error accessing microphone:', err);
+      setError('mic-access-denied');
+      setIsRecording(false);
+      cleanup();
+    }
+  }, [acquireWakeLock, cleanup, durationKey, sensitivityKey, stopRecording, tryHaptic]);
+
   useEffect(() => {
     return () => {
-      stopRecording();
+      stopRequestedRef.current = true;
+      cleanup();
     };
-  }, [stopRecording]);
+  }, [cleanup]);
 
   return {
     currentVolume,
     maxVolume,
     isRecording,
     error,
-    countdown,
+    countdownMs,
+    countdownSeconds: Math.ceil(countdownMs / 1000),
+    spectrum,
     startRecording,
     stopRecording,
   };

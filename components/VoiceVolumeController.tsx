@@ -1,284 +1,273 @@
-"use client";
+'use client';
 
-import { signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { useVoiceVolume } from "@/hooks/useVoiceVolume";
-import { clientLogger } from "@/lib/client-logger";
+import { useEffect, useRef, useState } from 'react';
+
+import { DeviceSelector } from './DeviceSelector';
+import { ManualVolumeSlider } from './ManualVolumeSlider';
+import { NowPlaying } from './NowPlaying';
+import { Spectrogram } from './Spectrogram';
+import { VoiceSettings } from './VoiceSettings';
+import { VolumeHistory } from './VolumeHistory';
+
+import { useSpotifyPlayback } from '@/hooks/useSpotifyPlayback';
+import { useVoiceVolume } from '@/hooks/useVoiceVolume';
+import { MAX_HISTORY_ENTRIES, type RecordingDurationKey, type SensitivityKey } from '@/lib/constants';
+import { useTranslation } from '@/lib/i18n';
+
+type HistoryEntry = { peak: number; at: number };
+
+const STORAGE_DURATION = 'jmv-duration';
+const STORAGE_SENSITIVITY = 'jmv-sensitivity';
+const SUCCESS_TOAST_MS = 2200;
+
+const DURATION_LABELS: Record<RecordingDurationKey, string> = {
+  short: '3',
+  default: '5',
+  long: '10',
+};
+
+function loadDuration(): RecordingDurationKey {
+  if (typeof window === 'undefined') {
+    return 'default';
+  }
+  const v = localStorage.getItem(STORAGE_DURATION);
+  return v === 'short' || v === 'long' ? v : 'default';
+}
+function loadSensitivity(): SensitivityKey {
+  if (typeof window === 'undefined') {
+    return 'medium';
+  }
+  const v = localStorage.getItem(STORAGE_SENSITIVITY);
+  return v === 'low' || v === 'high' ? v : 'medium';
+}
 
 export function VoiceVolumeController() {
-  const {
-    currentVolume,
-    maxVolume,
-    isRecording,
-    error,
-    countdown,
-    startRecording,
-  } = useVoiceVolume();
+  const { t } = useTranslation();
 
-  const [spotifyVolume, setSpotifyVolume] = useState(0);
-  const [deviceInfo, setDeviceInfo] = useState<{
-    device?: string;
-    isPlaying?: boolean;
-  }>({});
-  const [lastMaxVolume, setLastMaxVolume] = useState(0);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [durationKey, setDurationKey] = useState<RecordingDurationKey>('default');
+  const [sensitivityKey, setSensitivityKey] = useState<SensitivityKey>('medium');
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [lastSentPeak, setLastSentPeak] = useState<number | null>(null);
+  const [successToast, setSuccessToast] = useState<number | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Envoyer le volume maximum à Spotify quand l'enregistrement se termine
+  // Hydrate les préférences (client-only)
   useEffect(() => {
-    if (!isRecording && maxVolume > 0) {
-      const updateSpotifyVolume = async () => {
-        try {
-          setApiError(null);
-          const response = await fetch("/api/spotify/volume", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ volume: maxVolume }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setSpotifyVolume(data.volume);
-            setLastMaxVolume(maxVolume);
-          } else {
-            // Si erreur 401, le token a expiré et n'a pas pu être rafraîchi
-            // Déconnecter l'utilisateur
-            if (response.status === 401) {
-              clientLogger.error("Token expired, signing out...");
-              setApiError("Session expirée. Reconnexion en cours...");
-              setTimeout(() => {
-                signOut({ callbackUrl: "/" });
-              }, 2000);
-              return;
-            }
-
-            const errorData = await response.json();
-            clientLogger.error("Spotify API error:", errorData);
-
-            // Vérifier si c'est une erreur de contrôle du volume
-            if (
-              errorData.details?.error?.reason === "VOLUME_CONTROL_DISALLOW"
-            ) {
-              setApiError(
-                "❌ Contrôle du volume impossible sur cet appareil. Veuillez utiliser l'application desktop Spotify (Windows/Mac/Linux) au lieu du Web Player ou d'une enceinte connectée.",
-              );
-            } else if (response.status === 403) {
-              setApiError(
-                "Erreur 403: Assurez-vous d'avoir un appareil Spotify actif avec de la musique en lecture, et que vous avez un compte Spotify Premium.",
-              );
-            } else if (response.status === 404) {
-              setApiError(
-                "Aucun appareil Spotify actif trouvé. Lancez Spotify sur un appareil.",
-              );
-            } else {
-              setApiError(
-                `Erreur ${response.status}: ${errorData.error || "Impossible de modifier le volume"}`,
-              );
-            }
-          }
-        } catch (error) {
-          clientLogger.error("Error updating Spotify volume:", error);
-          setApiError("Erreur de connexion à l'API Spotify");
-        }
-      };
-
-      updateSpotifyVolume();
-    }
-  }, [isRecording, maxVolume]);
-
-  // Récupérer l'état de lecture actuel
-  useEffect(() => {
-    const fetchPlaybackState = async () => {
-      try {
-        const response = await fetch("/api/spotify/volume");
-        if (response.ok) {
-          const data = await response.json();
-          setDeviceInfo({
-            device: data.device,
-            isPlaying: data.isPlaying,
-          });
-          setSpotifyVolume(data.volume);
-        } else if (response.status === 401) {
-          // Token expiré, déconnecter l'utilisateur
-          clientLogger.error("Token expired, signing out...");
-          setApiError("Session expirée. Reconnexion en cours...");
-          setTimeout(() => {
-            signOut({ callbackUrl: "/" });
-          }, 2000);
-        }
-      } catch (error) {
-        clientLogger.error("Error fetching playback state:", error);
-      }
-    };
-
-    fetchPlaybackState();
-    const interval = setInterval(fetchPlaybackState, 5000);
-    return () => clearInterval(interval);
+    setDurationKey(loadDuration());
+    setSensitivityKey(loadSensitivity());
   }, []);
 
+  // useVoiceVolume est déclaré avant useSpotifyPlayback pour pouvoir
+  // passer `isRecording` au polling Spotify (mise en pause).
+  const { currentVolume, maxVolume, isRecording, error, countdownSeconds, spectrum, startRecording, stopRecording } =
+    useVoiceVolume({
+      durationKey,
+      sensitivityKey,
+      onComplete: async (peak) => {
+        if (peak <= 0) {
+          return;
+        }
+        const sent = await setVolume(peak);
+        if (sent !== null) {
+          setLastSentPeak(sent);
+          setHistory((prev) => [{ peak: sent, at: Date.now() }, ...prev].slice(0, MAX_HISTORY_ENTRIES));
+          if (successTimerRef.current) {
+            clearTimeout(successTimerRef.current);
+          }
+          setSuccessToast(sent);
+          successTimerRef.current = setTimeout(() => {
+            setSuccessToast(null);
+            successTimerRef.current = null;
+          }, SUCCESS_TOAST_MS);
+        }
+      },
+    });
+
+  const { state, apiError, isLoading, setVolume, sendAction, refresh } = useSpotifyPlayback({ paused: isRecording });
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) {
+        clearTimeout(successTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleDuration = (k: RecordingDurationKey) => {
+    setDurationKey(k);
+    localStorage.setItem(STORAGE_DURATION, k);
+  };
+  const handleSensitivity = (k: SensitivityKey) => {
+    setSensitivityKey(k);
+    localStorage.setItem(STORAGE_SENSITIVITY, k);
+  };
+
+  const errorMsg = error === 'mic-access-denied' ? t('errors.micAccess') : null;
+
   return (
-    <div className="w-full max-w-md mx-auto space-y-4 sm:space-y-6">
-      {/* Compte à rebours pendant l'enregistrement */}
-      {isRecording && (
-        <div className="flex flex-col items-center justify-center py-6 sm:py-8">
-          <div className="relative">
-            <div className="text-6xl sm:text-7xl md:text-8xl font-bold text-[#1DB954] animate-pulse">
-              {countdown}
-            </div>
-            <div className="absolute -inset-3 sm:-inset-4 border-4 border-[#1DB954] rounded-full animate-ping opacity-20" />
-          </div>
-          <p className="text-gray-400 mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-center px-4">
-            Enregistrement en cours... Faites du bruit !
-          </p>
-        </div>
-      )}
+    <div className="space-y-8">
+      {/* Now playing + device + controls */}
+      <NowPlaying
+        track={state.track}
+        device={state.device}
+        isPlaying={state.isPlaying}
+        isLoading={isLoading}
+        onPlayPause={() => sendAction(state.isPlaying ? 'pause' : 'play')}
+        onPrevious={() => sendAction('previous')}
+        onNext={() => sendAction('next')}
+      />
 
-      {/* Visualisation du volume actuel pendant l'enregistrement */}
-      {isRecording && (
-        <div className="space-y-2 sm:space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white">
-              Volume actuel
-            </h3>
-            <div className="flex items-center gap-3">
-              <span className="text-xl sm:text-2xl font-bold text-[#1DB954]">
-                {Math.round(currentVolume)}%
-              </span>
-              <span className="text-sm sm:text-base text-gray-400">
-                Pic: {Math.round(maxVolume)}%
-              </span>
-            </div>
-          </div>
-
-          <div className="relative h-8 bg-[#181818] rounded-full overflow-hidden border border-gray-800">
-            {/* Barre de volume actuel */}
-            <div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#1DB954] to-[#1ed760] transition-all duration-100 ease-out"
-              style={{ width: `${currentVolume}%` }}
-            />
-
-            {/* Indicateur du pic maximum */}
-            {maxVolume > 0 && (
-              <div
-                className="absolute top-0 h-full w-1 bg-yellow-400 shadow-lg shadow-yellow-400/50 transition-all duration-200"
-                style={{ left: `${maxVolume}%` }}
-              />
-            )}
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex space-x-1">
-                {[...Array(20)].map((_, i) => (
-                  <div
-                    // biome-ignore lint/suspicious/noArrayIndexKey: static array, never reordered
-                    key={i}
-                    className={`w-1 rounded-full transition-all duration-75 ${
-                      i < (currentVolume / 100) * 20
-                        ? "h-6 bg-black/60"
-                        : "h-2 bg-gray-700/50"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Volume maximum enregistré */}
-      {!isRecording && maxVolume > 0 && (
-        <div className="space-y-2 sm:space-y-3 bg-[#181818] rounded-xl p-3 sm:p-4 border border-[#1DB954]/30">
-          <div className="flex justify-between items-center gap-2">
-            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-[#1DB954]">
-              🎤 Volume max enregistré
-            </h3>
-            <span className="text-xl sm:text-2xl font-bold text-[#1DB954]">
-              {Math.round(lastMaxVolume)}%
+      {/* Spectrogramme + compteur */}
+      <section
+        aria-labelledby="vol-live-title"
+        className="relative overflow-hidden rounded-lg border border-line bg-bg-elevated"
+      >
+        <div className="flex items-baseline justify-between gap-4 px-5 pt-5">
+          <h2 id="vol-live-title" className="font-display text-base font-semibold tracking-tight">
+            {t('controller.live')}
+          </h2>
+          <div className="flex items-baseline gap-3 font-mono text-xs uppercase tracking-widest text-muted">
+            <span aria-live="polite">
+              <span className="text-fg text-base font-semibold">{Math.round(currentVolume)}</span>
+              <span className="ml-1">%</span>
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>
+              {t('controller.peak')} <span className="text-brand">{Math.round(maxVolume)}%</span>
             </span>
           </div>
-          <div className="relative h-4 bg-black rounded-full overflow-hidden">
-            <div
-              className="absolute top-0 left-0 h-full bg-[#1DB954] transition-all duration-300"
-              style={{ width: `${lastMaxVolume}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Visualisation du volume Spotify */}
-      <div className="space-y-2 sm:space-y-3">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-white">
-            Volume Spotify
-          </h3>
-          <span className="text-xl sm:text-2xl font-bold text-[#1DB954]">
-            {Math.round(spotifyVolume)}%
-          </span>
         </div>
 
-        <div className="relative h-8 bg-[#181818] rounded-full overflow-hidden border border-gray-800">
+        {/* Canvas spectrogramme */}
+        <div className="h-32 px-5 py-4 sm:h-40">
+          <Spectrogram spectrum={spectrum} active={isRecording} />
+        </div>
+
+        {/* Barre de progression (a11y) */}
+        <div
+          role="progressbar"
+          aria-label={t('controller.live')}
+          aria-valuenow={Math.round(currentVolume)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          className="relative h-1 bg-surface-2"
+        >
           <div
-            className="absolute top-0 left-0 h-full bg-[#1DB954] transition-all duration-300 ease-out"
-            style={{ width: `${spotifyVolume}%` }}
+            className="absolute inset-y-0 left-0 bg-brand transition-[width] duration-100"
+            style={{ width: `${currentVolume}%` }}
           />
+          {maxVolume > 0 && (
+            <div className="absolute inset-y-0 w-px bg-fg/80" style={{ left: `${maxVolume}%` }} aria-hidden="true" />
+          )}
         </div>
 
-        {deviceInfo.device && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-2 text-xs sm:text-sm text-gray-400">
-            <span className="truncate max-w-full sm:max-w-[60%]">
-              Appareil: {deviceInfo.device}
+        {/* Countdown overlay */}
+        {isRecording && (
+          <div
+            role="timer"
+            aria-live="polite"
+            aria-label={`${countdownSeconds}s`}
+            className="absolute right-4 top-4 flex items-center gap-2"
+          >
+            <span className="relative inline-flex h-3 w-3">
+              <span className="absolute inset-0 rounded-full bg-brand jmv-pulse-ring" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-brand" />
             </span>
-            <span className="flex items-center gap-2">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  deviceInfo.isPlaying ? "bg-[#1DB954]" : "bg-gray-600"
-                }`}
-              />
-              {deviceInfo.isPlaying ? "En lecture" : "En pause"}
+            <span className="font-mono text-sm font-semibold text-fg">
+              {countdownSeconds}
+              <span className="text-muted">{t('duration.unit')}</span>
             </span>
           </div>
         )}
+      </section>
+
+      {/* Toast de succès post-enregistrement */}
+      {successToast !== null && (
+        <output
+          aria-live="polite"
+          className="block rounded-md border border-brand/30 bg-brand-soft p-3 text-center text-sm font-semibold text-brand jmv-reveal"
+        >
+          {t('controller.sentToSpotify')} · <span className="font-mono">{Math.round(successToast)}%</span>
+        </output>
+      )}
+
+      {/* Bouton principal record / stop */}
+      <div className="flex items-stretch">
+        <button
+          type="button"
+          onClick={isRecording ? stopRecording : startRecording}
+          aria-label={isRecording ? t('controller.stop') : t('controller.start')}
+          className={`relative inline-flex flex-1 items-center justify-center gap-3 rounded-pill px-6 py-4 font-display text-base font-semibold transition-all duration-200 ${
+            isRecording
+              ? 'bg-danger text-white shadow-lg shadow-danger/30 hover:scale-[1.02] active:scale-[0.97]'
+              : 'bg-brand text-on-brand shadow-glow hover:bg-brand-hover hover:scale-[1.02] active:scale-[0.97]'
+          }`}
+        >
+          <span
+            className={`inline-block h-2.5 w-2.5 rounded-full ${
+              isRecording ? 'bg-white animate-pulse' : 'bg-on-brand/80'
+            }`}
+            aria-hidden="true"
+          />
+          {isRecording ? (
+            <>
+              <span>{t('controller.stop')}</span>
+              <span className="font-mono text-sm font-medium opacity-80" aria-hidden="true">
+                · {countdownSeconds}
+                {t('duration.unit')}
+              </span>
+            </>
+          ) : (
+            <span>
+              {t('controller.start')} ·{' '}
+              <span className="font-mono text-sm opacity-80">
+                {DURATION_LABELS[durationKey]}
+                {t('duration.unit')}
+              </span>
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* Bouton d'enregistrement */}
-      <button
-        type="button"
-        onClick={startRecording}
-        disabled={isRecording}
-        className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-full font-bold transition-all duration-200 transform text-sm sm:text-base ${
-          isRecording
-            ? "bg-gray-600 cursor-not-allowed"
-            : "bg-[#1DB954] hover:bg-[#1ed760] hover:scale-105 active:scale-95 shadow-lg shadow-[#1DB954]/50"
-        } text-black`}
-      >
-        {isRecording ? (
-          <span className="flex items-center justify-center gap-2">
-            <span className="w-2 h-2 sm:w-3 sm:h-3 bg-black rounded-full animate-pulse" />
-            <span className="hidden sm:inline">Enregistrement...</span>
-            <span className="sm:hidden">En cours...</span>
-          </span>
-        ) : (
-          <>
-            <span className="hidden sm:inline">
-              🎤 Démarrer l&apos;enregistrement (5 sec)
-            </span>
-            <span className="sm:hidden">🎤 Enregistrer (5 sec)</span>
-          </>
-        )}
-      </button>
+      {/* Slider manuel */}
+      <ManualVolumeSlider
+        value={state.volume}
+        disabled={isRecording || !state.device?.supportsVolume}
+        onChange={(v) => setVolume(v)}
+      />
 
-      {/* Messages d'erreur */}
-      {error && (
-        <div className="p-3 sm:p-4 bg-red-900/20 border border-red-800 rounded-lg text-red-400 text-xs sm:text-sm">
-          {error}
+      {/* Settings : durée + sensibilité */}
+      <VoiceSettings
+        duration={durationKey}
+        sensitivity={sensitivityKey}
+        onDuration={handleDuration}
+        onSensitivity={handleSensitivity}
+        disabled={isRecording}
+      />
+
+      {/* Historique */}
+      {history.length > 0 && <VolumeHistory history={history} lastPeak={lastSentPeak} />}
+
+      {/* Sélecteur d'appareil */}
+      <DeviceSelector
+        devices={state.devices}
+        activeDeviceId={state.device?.id ?? null}
+        onSelect={async (id) => {
+          await sendAction('transfer', id);
+          refresh();
+        }}
+      />
+
+      {/* Erreurs */}
+      {errorMsg && (
+        <div role="alert" className="rounded-md border border-danger/30 bg-danger-soft p-4 text-sm text-danger">
+          {errorMsg}
         </div>
       )}
-
-      {/* Erreur API Spotify */}
       {apiError && (
-        <div className="p-3 sm:p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg text-yellow-400 text-xs sm:text-sm">
-          <p className="font-semibold mb-1">⚠️ Erreur Spotify</p>
-          <p>{apiError}</p>
+        <div role="alert" className="rounded-md border border-warn/30 bg-warn-soft p-4 text-sm text-warn">
+          <p className="font-display text-base font-semibold">{t('errors.spotifyTitle')}</p>
+          <p className="mt-1">{apiError}</p>
         </div>
       )}
     </div>

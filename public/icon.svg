@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="512" height="512" role="img" aria-label="Jean-Michel Volume">
+  <defs>
+    <linearGradient id="jm-helmet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffcd11"/>
+      <stop offset="100%" stop-color="#e5b400"/>
+    </linearGradient>
+    <linearGradient id="jm-wave" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#117a3a"/>
+      <stop offset="100%" stop-color="#117a3a" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Visière -->
+  <ellipse cx="80" cy="78" rx="52" ry="6.5" fill="url(#jm-helmet)" stroke="#14110d" stroke-width="2.5"/>
+
+  <!-- Dôme -->
+  <path d="M 42 78 Q 42 28 80 26 Q 118 28 118 78 Z" fill="url(#jm-helmet)" stroke="#14110d" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Crête centrale -->
+  <path d="M 72 26 Q 72 20 80 19 Q 88 20 88 26 L 88 52 Q 80 54 72 52 Z" fill="url(#jm-helmet)" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- Rainures -->
+  <line x1="77" y1="24" x2="77" y2="50" stroke="#14110d" stroke-opacity="0.45" stroke-width="1.1" stroke-linecap="round"/>
+  <line x1="80" y1="22" x2="80" y2="52" stroke="#14110d" stroke-opacity="0.55" stroke-width="1.1" stroke-linecap="round"/>
+  <line x1="83" y1="24" x2="83" y2="50" stroke="#14110d" stroke-opacity="0.45" stroke-width="1.1" stroke-linecap="round"/>
+
+  <!-- Liseré sous le dôme -->
+  <path d="M 44 76 Q 80 82 116 76" fill="none" stroke="#14110d" stroke-width="1.5" stroke-opacity="0.45"/>
+
+  <!-- Écusson JM -->
+  <rect x="68" y="56" width="24" height="14" rx="2" fill="#14110d" stroke="#14110d" stroke-width="1.5"/>
+  <text x="80" y="66.5" text-anchor="middle" font-size="9" font-weight="700" font-family="ui-monospace, 'JetBrains Mono', monospace" fill="#ffcd11" letter-spacing="0.5">JM</text>
+
+  <!-- Waveform (barres statiques, hauteurs identiques au composant React) -->
+  <rect x="38" y="105" width="4" height="22" rx="2" fill="url(#jm-wave)"/>
+  <rect x="46" y="96" width="4" height="40" rx="2" fill="url(#jm-wave)"/>
+  <rect x="54" y="102" width="4" height="28" rx="2" fill="url(#jm-wave)"/>
+  <rect x="62" y="90" width="4" height="52" rx="2" fill="url(#jm-wave)"/>
+  <rect x="70" y="94" width="4" height="44" rx="2" fill="url(#jm-wave)"/>
+  <rect x="78" y="85" width="4" height="62" rx="2" fill="url(#jm-wave)"/>
+  <rect x="86" y="93" width="4" height="46" rx="2" fill="url(#jm-wave)"/>
+  <rect x="94" y="89" width="4" height="54" rx="2" fill="url(#jm-wave)"/>
+  <rect x="102" y="101" width="4" height="30" rx="2" fill="url(#jm-wave)"/>
+  <rect x="110" y="97" width="4" height="38" rx="2" fill="url(#jm-wave)"/>
+  <rect x="118" y="106" width="4" height="20" rx="2" fill="url(#jm-wave)"/>
+</svg>

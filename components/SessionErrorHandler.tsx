@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { signOut, useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { signOut, useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 
 /**
  * Composant qui gère les erreurs de session (token expiré, etc.)
@@ -12,8 +12,8 @@ export function SessionErrorHandler() {
 
   useEffect(() => {
     // Si la session contient une erreur de refresh du token, déconnecter l'utilisateur
-    if (session?.error === "RefreshAccessTokenError") {
-      signOut({ callbackUrl: "/" });
+    if (session?.error === 'RefreshAccessTokenError') {
+      signOut({ callbackUrl: '/' });
     }
   }, [session]);
 

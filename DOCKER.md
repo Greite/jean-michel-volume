@@ -1,96 +1,96 @@
-# 🐳 Guide de déploiement Docker
+# 🐳 Docker deployment guide
 
-Ce guide détaille comment déployer Jean-Michel Volume avec Docker.
+This guide explains how to deploy Jean-Michel Volume with Docker.
 
-## 📋 Prérequis
+## 📋 Prerequisites
 
-- Docker et Docker Compose installés
-- Un compte Spotify Developer avec une application configurée
-- Les credentials Spotify (Client ID et Client Secret)
+- Docker and Docker Compose installed
+- A Spotify Developer account with a configured application
+- Spotify credentials (Client ID and Client Secret)
 
-**Note** : Le Dockerfile utilise l'image `node:22-alpine` pour garantir l'utilisation de la version LTS Jod de Node.js.
+**Note**: The Dockerfile uses the `node:22-alpine` image to ensure usage of the Node.js LTS Jod version.
 
-## 🚀 Déploiement rapide
+## 🚀 Quick deployment
 
-### 1. Configurer les variables d'environnement
+### 1. Configure environment variables
 
-Créez un fichier `.env` à la racine du projet :
+Create a `.env` file at the project root:
 
 ```bash
 cp .env.docker.example .env
 ```
 
-Éditez le fichier `.env` avec vos vraies valeurs :
+Edit the `.env` file with your real values:
 
 ```env
-AUTH_SECRET=<généré avec: openssl rand -base64 32>
+AUTH_SECRET=<generated with: openssl rand -base64 32>
 NEXTAUTH_URL=http://localhost:3000
-SPOTIFY_CLIENT_ID=<votre-client-id>
-SPOTIFY_CLIENT_SECRET=<votre-client-secret>
+SPOTIFY_CLIENT_ID=<your-client-id>
+SPOTIFY_CLIENT_SECRET=<your-client-secret>
 ```
 
-### 2. Lancer l'application
+### 2. Run the application
 
 ```bash
 docker-compose up -d
 ```
 
-### 3. Vérifier les logs
+### 3. Check the logs
 
 ```bash
 docker-compose logs -f
 ```
 
-### 4. Accéder à l'application
+### 4. Access the application
 
-Ouvrez votre navigateur sur [http://localhost:3000](http://localhost:3000)
+Open your browser at [http://localhost:3000](http://localhost:3000)
 
-## 🔧 Commandes utiles
+## 🔧 Useful commands
 
-### Arrêter l'application
+### Stop the application
 ```bash
 docker-compose down
 ```
 
-### Redémarrer l'application
+### Restart the application
 ```bash
 docker-compose restart
 ```
 
-### Rebuild l'image
+### Rebuild the image
 ```bash
 docker-compose up -d --build
 ```
 
-### Voir les logs
+### View the logs
 ```bash
 docker-compose logs -f jean-michel-volume
 ```
 
-### Nettoyer tout
+### Clean everything
 ```bash
 docker-compose down -v
 docker rmi jean-michel-volume
 ```
 
-## 🌐 Déploiement en production
+## 🌐 Production deployment
 
-### 1. Modifier NEXTAUTH_URL
+### 1. Update NEXTAUTH_URL
 
-Pour un déploiement en production, modifiez `NEXTAUTH_URL` dans votre fichier `.env` :
+For a production deployment, update `NEXTAUTH_URL` in your `.env` file:
 
 ```env
-NEXTAUTH_URL=https://votre-domaine.com
+NEXTAUTH_URL=https://your-domain.com
 ```
 
-### 2. Configurer un reverse proxy
+### 2. Configure a reverse proxy
 
-Exemple avec Nginx :
+Example with Nginx:
 
 ```nginx
 server {
     listen 80;
-    server_name votre-domaine.com;
+    server_name your-domain.com;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -103,24 +103,24 @@ server {
 }
 ```
 
-### 3. Configurer HTTPS
+### 3. Configure HTTPS
 
-Utilisez Certbot pour obtenir un certificat SSL gratuit :
+Use Certbot to get a free SSL certificate:
 
 ```bash
-sudo certbot --nginx -d votre-domaine.com
+sudo certbot --nginx -d your-domain.com
 ```
 
-### 4. Mettre à jour Spotify Developer Dashboard
+### 4. Update Spotify Developer Dashboard
 
-N'oubliez pas d'ajouter l'URL de callback en production :
+Don't forget to add the production callback URL:
 ```
-https://votre-domaine.com/api/auth/callback/spotify
+https://your-domain.com/api/auth/callback/spotify
 ```
 
-## 📦 Build manuel
+## 📦 Manual build
 
-Si vous préférez construire l'image manuellement :
+If you prefer to build the image manually:
 
 ```bash
 # Build
@@ -129,51 +129,51 @@ docker build -t jean-michel-volume:latest .
 # Run
 docker run -d \
   -p 3000:3000 \
-  -e AUTH_SECRET=<votre-secret> \
+  -e AUTH_SECRET=<your-secret> \
   -e NEXTAUTH_URL=http://localhost:3000 \
-  -e SPOTIFY_CLIENT_ID=<votre-client-id> \
-  -e SPOTIFY_CLIENT_SECRET=<votre-client-secret> \
+  -e SPOTIFY_CLIENT_ID=<your-client-id> \
+  -e SPOTIFY_CLIENT_SECRET=<your-client-secret> \
   --name jean-michel-volume \
   --restart unless-stopped \
   jean-michel-volume:latest
 ```
 
-## 🔐 Sécurité
+## 🔐 Security
 
-### Variables d'environnement sensibles
+### Sensitive environment variables
 
-- Ne commitez **jamais** votre fichier `.env` dans Git
-- Utilisez des secrets managers en production (Docker Secrets, Kubernetes Secrets, etc.)
-- Régénérez `AUTH_SECRET` pour chaque environnement
+- **Never** commit your `.env` file to Git
+- Use secret managers in production (Docker Secrets, Kubernetes Secrets, etc.)
+- Regenerate `AUTH_SECRET` for each environment
 
 ### Permissions
 
-L'application s'exécute avec un utilisateur non-root (`nextjs:nodejs`) pour plus de sécurité.
+The application runs as a non-root user (`nextjs:nodejs`) for added security.
 
-## 🐛 Résolution de problèmes
+## 🐛 Troubleshooting
 
-### Le container ne démarre pas
+### The container does not start
 
-Vérifiez les logs :
+Check the logs:
 ```bash
 docker-compose logs jean-michel-volume
 ```
 
-### Les variables d'environnement ne sont pas chargées
+### Environment variables are not loaded
 
-1. Vérifiez que votre fichier `.env` est à la racine
-2. Redémarrez le container : `docker-compose restart`
-3. Vérifiez les variables : `docker-compose exec jean-michel-volume env | grep SPOTIFY`
+1. Make sure your `.env` file is at the root
+2. Restart the container: `docker-compose restart`
+3. Check the variables: `docker-compose exec jean-michel-volume env | grep SPOTIFY`
 
-### L'application n'est pas accessible
+### The application is not accessible
 
-1. Vérifiez que le port 3000 n'est pas déjà utilisé
-2. Vérifiez que le container est bien lancé : `docker ps`
-3. Testez depuis le container : `docker-compose exec jean-michel-volume curl localhost:3000`
+1. Make sure port 3000 is not already in use
+2. Make sure the container is running: `docker ps`
+3. Test from the container: `docker-compose exec jean-michel-volume curl localhost:3000`
 
-## 📊 Surveillance
+## 📊 Monitoring
 
-### Voir l'utilisation des ressources
+### View resource usage
 
 ```bash
 docker stats jean-michel-volume
@@ -181,12 +181,12 @@ docker stats jean-michel-volume
 
 ### Health check
 
-Ajoutez un health check dans le `docker-compose.yml` :
+Add a health check in `docker-compose.yml`:
 
 ```yaml
 services:
   jean-michel-volume:
-    # ... autres configurations
+    # ... other configurations
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
       interval: 30s
@@ -195,29 +195,29 @@ services:
       start_period: 40s
 ```
 
-## 🔄 Mise à jour
+## 🔄 Updates
 
-Pour mettre à jour l'application :
+To update the application:
 
 ```bash
-# Pull les derniers changements
+# Pull the latest changes
 git pull
 
-# Rebuild et redémarrer
+# Rebuild and restart
 docker-compose up -d --build
 ```
 
-## 💡 Optimisations
+## 💡 Optimizations
 
 ### Multi-stage build
 
-Le Dockerfile utilise déjà un build multi-stage pour optimiser la taille de l'image finale.
+The Dockerfile already uses a multi-stage build to optimize the final image size.
 
-Taille approximative de l'image : **~150-200 MB**
+Approximate image size: **~150-200 MB**
 
-### Cache des layers
+### Layer cache
 
-Docker cache automatiquement les layers. Pour forcer un rebuild complet :
+Docker caches layers automatically. To force a full rebuild:
 
 ```bash
 docker-compose build --no-cache

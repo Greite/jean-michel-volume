@@ -1,32 +1,32 @@
-# Déploiement de Jean-Michel Volume
+# Deploying Jean-Michel Volume
 
-## GitHub Actions - Build automatique de l'image Docker
+## GitHub Actions - Automatic Docker image build
 
 ### Configuration
 
-Le workflow GitHub Actions (`.github/workflows/docker-build.yml`) build et push automatiquement l'image Docker vers **GitHub Container Registry (GHCR)**.
+The GitHub Actions workflow (`.github/workflows/docker-build.yml`) automatically builds and pushes the Docker image to **GitHub Container Registry (GHCR)**.
 
-### Déclencheurs
+### Triggers
 
-L'image est buildée automatiquement dans les cas suivants :
-- **Push sur main/master** : Crée un tag `latest` et `main-<sha>`
-- **Pull Request** : Build l'image mais ne la push pas (test uniquement)
-- **Tag version** (ex: `v1.0.0`) : Crée les tags `1.0.0`, `1.0`, `1`, et `latest`
+The image is built automatically in the following cases:
+- **Push to main/master**: Creates a `latest` tag and `main-<sha>`
+- **Pull Request**: Builds the image but does not push it (test only)
+- **Version tag** (e.g., `v1.0.0`): Creates the tags `1.0.0`, `1.0`, `1`, and `latest`
 
-### Pas de configuration nécessaire
+### No configuration needed
 
-Le workflow utilise `GITHUB_TOKEN` qui est automatiquement fourni par GitHub Actions. **Aucun secret à configurer** !
+The workflow uses `GITHUB_TOKEN`, which is automatically provided by GitHub Actions. **No secrets to configure!**
 
-### Tags générés
+### Generated tags
 
-Pour chaque commit sur `main` :
+For each commit on `main`:
 ```
 ghcr.io/greite/jean-michel-volume:latest
 ghcr.io/greite/jean-michel-volume:main
 ghcr.io/greite/jean-michel-volume:main-<commit-sha>
 ```
 
-Pour chaque tag version (ex: `v1.2.3`) :
+For each version tag (e.g., `v1.2.3`):
 ```
 ghcr.io/greite/jean-michel-volume:1.2.3
 ghcr.io/greite/jean-michel-volume:1.2
@@ -34,33 +34,33 @@ ghcr.io/greite/jean-michel-volume:1
 ghcr.io/greite/jean-michel-volume:latest
 ```
 
-### Plateformes supportées
+### Supported platforms
 
-L'image est buildée pour plusieurs architectures :
+The image is built for several architectures:
 - `linux/amd64` (Intel/AMD 64-bit)
 - `linux/arm64` (ARM 64-bit - Raspberry Pi, Mac M1/M2, etc.)
 
-## Utiliser l'image depuis GHCR
+## Using the image from GHCR
 
-### 1. Authentification (si dépôt privé)
+### 1. Authentication (if private repository)
 
 ```bash
 echo $GITHUB_TOKEN | docker login ghcr.io -u greite --password-stdin
 ```
 
-### 2. Pull de l'image
+### 2. Pull the image
 
 ```bash
-# Dernière version
+# Latest version
 docker pull ghcr.io/greite/jean-michel-volume:latest
 
-# Version spécifique
+# Specific version
 docker pull ghcr.io/greite/jean-michel-volume:1.0.0
 ```
 
-### 3. Lancer le conteneur
+### 3. Run the container
 
-Créer un fichier `.env` avec vos variables :
+Create a `.env` file with your variables:
 ```bash
 AUTH_SECRET=your-auth-secret
 NEXTAUTH_URL=https://your-domain.com
@@ -70,7 +70,7 @@ DEBUG_MODE=false
 NEXT_PUBLIC_DEBUG_MODE=false
 ```
 
-Puis lancer :
+Then run:
 ```bash
 docker run -d \
   --name jean-michel-volume \
@@ -79,7 +79,7 @@ docker run -d \
   ghcr.io/greite/jean-michel-volume:latest
 ```
 
-Ou avec docker-compose :
+Or with docker-compose:
 ```yaml
 services:
   jean-michel-volume:
@@ -92,9 +92,9 @@ services:
     restart: unless-stopped
 ```
 
-## Build local
+## Local build
 
-Si vous voulez builder l'image localement :
+If you want to build the image locally:
 
 ```bash
 # Build
@@ -104,39 +104,39 @@ docker build -t jean-michel-volume .
 docker run -d -p 3000:3000 --env-file .env jean-michel-volume
 ```
 
-## Rendre l'image publique (optionnel)
+## Make the image public (optional)
 
-Par défaut, les images GHCR sont **privées**. Pour la rendre publique :
+By default, GHCR images are **private**. To make it public:
 
-1. Aller sur https://github.com/greite/jean-michel-volume/pkgs/container/jean-michel-volume
-2. Cliquer sur "Package settings"
-3. Scroll vers le bas jusqu'à "Danger Zone"
-4. Cliquer sur "Change visibility" → "Public"
+1. Go to https://github.com/greite/jean-michel-volume/pkgs/container/jean-michel-volume
+2. Click "Package settings"
+3. Scroll down to "Danger Zone"
+4. Click "Change visibility" → "Public"
 
-Cela permettra à tout le monde de pull l'image sans authentification.
+This will allow anyone to pull the image without authentication.
 
-## Créer une release avec tag
+## Create a release with a tag
 
-Pour créer une nouvelle version avec tag :
+To create a new version with a tag:
 
 ```bash
-# Créer un tag
+# Create a tag
 git tag v1.0.0
 git push origin v1.0.0
 
-# Ou créer une release via GitHub UI
-# → Cela déclenchera automatiquement le build avec les tags de version
+# Or create a release via the GitHub UI
+# → This will automatically trigger the build with version tags
 ```
 
-## Cache de build
+## Build cache
 
-Le workflow utilise GitHub Actions Cache pour accélérer les builds :
-- Les layers Docker sont mis en cache entre les builds
-- Réduit considérablement le temps de build pour les commits suivants
+The workflow uses GitHub Actions Cache to speed up builds:
+- Docker layers are cached between builds
+- Significantly reduces build time for subsequent commits
 
 ## Monitoring
 
-Pour voir les builds en cours :
-- Aller dans l'onglet **Actions** de votre dépôt GitHub
-- Cliquer sur le workflow "Build and Push Docker Image"
-- Voir les logs de chaque étape
+To see ongoing builds:
+- Go to the **Actions** tab of your GitHub repository
+- Click on the "Build and Push Docker Image" workflow
+- View the logs of each step

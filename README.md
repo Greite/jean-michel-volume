@@ -1,94 +1,94 @@
 # 👷‍♂️ Jean-Michel Volume
 
-Une application web moderne qui vous permet de contrôler le volume de Spotify en temps réel avec votre voix !
+A modern web application that lets you control your Spotify volume in real time using your voice!
 
-## ✨ Fonctionnalités
+## ✨ Features
 
-- 🎤 **Contrôle vocal en temps réel** : Le volume de Spotify s'adapte automatiquement à l'intensité de votre voix
-- 🎨 **Interface moderne** : Design élégant avec Tailwind CSS et animations fluides
-- 🔒 **Authentification sécurisée** : Connexion via OAuth Spotify
-- 📊 **Visualisation en direct** : Barres de progression pour visualiser le volume vocal et Spotify
-- 📱 **Responsive** : Fonctionne sur tous les appareils
+- 🎤 **Real-time voice control**: Spotify volume automatically adapts to the intensity of your voice
+- 🎨 **Modern interface**: Sleek design with Tailwind CSS and smooth animations
+- 🔒 **Secure authentication**: Login via Spotify OAuth
+- 📊 **Live visualization**: Progress bars to visualize voice and Spotify volume
+- 📱 **Responsive**: Works on all devices
 
 ## 🚀 Installation
 
-### Prérequis
+### Prerequisites
 
-- Node.js LTS (recommandé : utilisez [nvm](https://github.com/nvm-sh/nvm))
-- pnpm installé
-- Un compte Spotify Premium (nécessaire pour l'API de contrôle de lecture)
-- Un navigateur moderne avec support du micro
+- Node.js LTS (recommended: use [nvm](https://github.com/nvm-sh/nvm))
+- pnpm installed
+- A Spotify Premium account (required for the playback control API)
+- A modern browser with microphone support
 
-### 1. Cloner le projet
+### 1. Clone the project
 
 ```bash
-git clone <votre-repo>
+git clone <your-repo>
 cd spotify-volume-control
 ```
 
-### 2. Installer la bonne version de Node (avec nvm)
+### 2. Install the right Node version (with nvm)
 
-Un fichier `.nvmrc` est présent pour utiliser automatiquement la version LTS :
+A `.nvmrc` file is provided to automatically use the LTS version:
 
 ```bash
 nvm use
-# Ou si la version n'est pas installée :
+# Or if the version is not installed:
 nvm install
 ```
 
-### 3. Installer les dépendances
+### 3. Install dependencies
 
 ```bash
 pnpm install
 ```
 
-### 4. Configurer Spotify Developer
+### 4. Configure Spotify Developer
 
-1. Allez sur [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Créez une nouvelle application
-3. Configurez les paramètres :
-   - **Redirect URIs** : Ajoutez `http://localhost:3000/api/auth/callback/spotify`
-   - Notez votre **Client ID** et **Client Secret**
+1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Create a new application
+3. Configure the settings:
+   - **Redirect URIs**: Add `http://localhost:3000/api/auth/callback/spotify`
+   - Note your **Client ID** and **Client Secret**
 
-### 5. Configurer les variables d'environnement
+### 5. Configure environment variables
 
-Copiez le fichier `.env.example` vers `.env.local` :
+Copy the `.env.example` file to `.env.local`:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Éditez `.env.local` avec vos identifiants :
+Edit `.env.local` with your credentials:
 
 ```env
-AUTH_SECRET=<générez avec: openssl rand -base64 32>
-SPOTIFY_CLIENT_ID=<votre-client-id-spotify>
-SPOTIFY_CLIENT_SECRET=<votre-client-secret-spotify>
+AUTH_SECRET=<generate with: openssl rand -base64 32>
+SPOTIFY_CLIENT_ID=<your-spotify-client-id>
+SPOTIFY_CLIENT_SECRET=<your-spotify-client-secret>
 AUTH_URL=http://localhost:3000
 ```
 
-### 6. Lancer l'application
+### 6. Run the application
 
 ```bash
 pnpm dev
 ```
 
-Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 🐳 Installation avec Docker
+## 🐳 Installation with Docker
 
-### Option 0 : Utiliser l'image pré-buildée depuis GitHub Container Registry
+### Option 0: Use the pre-built image from GitHub Container Registry
 
-L'image Docker est automatiquement buildée et publiée sur GHCR à chaque commit.
+The Docker image is automatically built and published on GHCR for every commit.
 
 ```bash
-# Pull de l'image (publique)
+# Pull the image (public)
 docker pull ghcr.io/greite/jean-michel-volume:latest
 
-# Ou utiliser docker-compose avec l'image
+# Or use docker-compose with the image
 ```
 
-Créez un fichier `.env` puis lancez :
+Create a `.env` file then run:
 
 ```bash
 docker run -d \
@@ -98,169 +98,169 @@ docker run -d \
   ghcr.io/greite/jean-michel-volume:latest
 ```
 
-Pour plus de détails sur le déploiement, consultez [DEPLOYMENT.md](./DEPLOYMENT.md).
+For more details about deployment, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-### Option 1 : Docker Compose (recommandé)
+### Option 1: Docker Compose (recommended)
 
-1. **Créez un fichier `.env`** à la racine du projet :
+1. **Create a `.env` file** at the project root:
 
 ```env
-AUTH_SECRET=<votre-secret-généré>
+AUTH_SECRET=<your-generated-secret>
 NEXTAUTH_URL=http://localhost:3000
-SPOTIFY_CLIENT_ID=<votre-client-id>
-SPOTIFY_CLIENT_SECRET=<votre-client-secret>
+SPOTIFY_CLIENT_ID=<your-client-id>
+SPOTIFY_CLIENT_SECRET=<your-client-secret>
 ```
 
-2. **Lancez l'application** :
+2. **Run the application**:
 
 ```bash
 docker-compose up -d
 ```
 
-3. **Accédez à l'application** : [http://localhost:3000](http://localhost:3000)
+3. **Access the application**: [http://localhost:3000](http://localhost:3000)
 
-4. **Arrêter l'application** :
+4. **Stop the application**:
 
 ```bash
 docker-compose down
 ```
 
-### Option 2 : Docker manuel
+### Option 2: Manual Docker
 
-1. **Build l'image** :
+1. **Build the image**:
 
 ```bash
 docker build -t jean-michel-volume .
 ```
 
-2. **Lancez le container** :
+2. **Run the container**:
 
 ```bash
 docker run -d \
   -p 3000:3000 \
-  -e AUTH_SECRET=<votre-secret> \
+  -e AUTH_SECRET=<your-secret> \
   -e NEXTAUTH_URL=http://localhost:3000 \
-  -e SPOTIFY_CLIENT_ID=<votre-client-id> \
-  -e SPOTIFY_CLIENT_SECRET=<votre-client-secret> \
+  -e SPOTIFY_CLIENT_ID=<your-client-id> \
+  -e SPOTIFY_CLIENT_SECRET=<your-client-secret> \
   --name jean-michel-volume \
   jean-michel-volume
 ```
 
-### Variables d'environnement Docker
+### Docker environment variables
 
-Toutes les variables d'environnement peuvent être configurées au runtime :
+All environment variables can be configured at runtime:
 
-| Variable | Description | Exemple |
+| Variable | Description | Example |
 |----------|-------------|---------|
-| `AUTH_SECRET` | Secret pour NextAuth (généré avec `openssl rand -base64 32`) | `7mP9J/4M1NIYREuOMkJ...` |
-| `NEXTAUTH_URL` | URL de base de l'application | `http://localhost:3000` |
-| `SPOTIFY_CLIENT_ID` | Client ID de votre app Spotify | `4a1cdbadbd514e73...` |
-| `SPOTIFY_CLIENT_SECRET` | Client Secret de votre app Spotify | `3ecc6d66c05241dd...` |
+| `AUTH_SECRET` | NextAuth secret (generated with `openssl rand -base64 32`) | `7mP9J/4M1NIYREuOMkJ...` |
+| `NEXTAUTH_URL` | Base URL of the application | `http://localhost:3000` |
+| `SPOTIFY_CLIENT_ID` | Client ID of your Spotify app | `4a1cdbadbd514e73...` |
+| `SPOTIFY_CLIENT_SECRET` | Client Secret of your Spotify app | `3ecc6d66c05241dd...` |
 
-**Note** : En production, modifiez `NEXTAUTH_URL` pour pointer vers votre domaine (ex: `https://votre-domaine.com`)
+**Note**: In production, change `NEXTAUTH_URL` to point to your domain (e.g., `https://your-domain.com`)
 
-## 📖 Comment l'utiliser
+## 📖 How to use it
 
-1. **Connectez-vous** avec votre compte Spotify
-2. **Lancez de la musique** sur n'importe quel appareil Spotify (ordinateur, téléphone, enceinte connectée)
-3. **Autorisez l'accès au microphone** quand votre navigateur le demande
-4. **Cliquez sur "Démarrer le contrôle vocal"**
-5. **Parlez ou faites du bruit** : plus vous êtes fort, plus le volume Spotify augmente !
+1. **Log in** with your Spotify account
+2. **Start playing music** on any Spotify device (computer, phone, smart speaker)
+3. **Allow microphone access** when your browser asks
+4. **Click "Start voice control"**
+5. **Speak or make noise**: the louder you are, the higher Spotify's volume goes!
 
-## 🛠️ Technologies utilisées
+## 🛠️ Technologies used
 
-- **Next.js 16** : Framework React avec App Router
-- **TypeScript** : Typage statique
-- **Tailwind CSS 4** : Styles modernes et responsive
-- **NextAuth.js** : Authentification OAuth
-- **Web Audio API** : Analyse du volume vocal en temps réel
-- **Spotify Web API** : Contrôle de la lecture
+- **Next.js 16**: React framework with App Router
+- **TypeScript**: Static typing
+- **Tailwind CSS 4**: Modern and responsive styling
+- **NextAuth.js**: OAuth authentication
+- **Web Audio API**: Real-time voice volume analysis
+- **Spotify Web API**: Playback control
 
-## 📁 Structure du projet
+## 📁 Project structure
 
 ```
 ├── app/
 │   ├── api/
-│   │   ├── auth/[...nextauth]/route.ts  # Route NextAuth
-│   │   └── spotify/volume/route.ts      # API de contrôle du volume
-│   ├── layout.tsx                       # Layout principal
-│   └── page.tsx                         # Page d'accueil
+│   │   ├── auth/[...nextauth]/route.ts  # NextAuth route
+│   │   └── spotify/volume/route.ts      # Volume control API
+│   ├── layout.tsx                       # Main layout
+│   └── page.tsx                         # Home page
 ├── components/
-│   └── VoiceVolumeController.tsx        # Composant de contrôle vocal
+│   └── VoiceVolumeController.tsx        # Voice control component
 ├── hooks/
-│   └── useVoiceVolume.ts                # Hook pour l'analyse audio
+│   └── useVoiceVolume.ts                # Audio analysis hook
 ├── lib/
-│   └── auth.ts                          # Configuration NextAuth
+│   └── auth.ts                          # NextAuth configuration
 └── types/
-    └── next-auth.d.ts                   # Types TypeScript pour NextAuth
+    └── next-auth.d.ts                   # NextAuth TypeScript types
 ```
 
-## 🔧 Fonctionnement technique
+## 🔧 Technical details
 
-### Capture et analyse audio
+### Audio capture and analysis
 
-L'application utilise l'API Web Audio pour :
-1. Capturer le flux audio du microphone
-2. Analyser les fréquences en temps réel avec `AnalyserNode`
-3. Calculer le volume moyen
-4. Normaliser entre 0 et 100
+The application uses the Web Audio API to:
+1. Capture the audio stream from the microphone
+2. Analyze frequencies in real time with `AnalyserNode`
+3. Compute the average volume
+4. Normalize between 0 and 100
 
-### Synchronisation avec Spotify
+### Spotify synchronization
 
-- Le volume est envoyé à l'API Spotify toutes les 200ms maximum
-- L'application vérifie l'état de lecture toutes les 5 secondes
-- Le volume est limité entre 0 et 100%
+- The volume is sent to the Spotify API every 200ms maximum
+- The application checks the playback state every 5 seconds
+- The volume is clamped between 0 and 100%
 
-## ⚠️ Notes importantes
+## ⚠️ Important notes
 
-- **Spotify Premium requis** : L'API de contrôle de lecture nécessite un compte Premium
-- **Application desktop recommandée** : Utilisez l'application desktop Spotify (Windows/Mac/Linux) pour le contrôle du volume
-- **Web Player non supporté** : Le Spotify Web Player ne permet pas le contrôle du volume via l'API
-- **Appareil actif requis** : Un appareil Spotify doit être en lecture pour que le contrôle fonctionne
-- **HTTPS en production** : Pour utiliser le microphone en production, l'application doit être servie en HTTPS
+- **Spotify Premium required**: The playback control API requires a Premium account
+- **Desktop app recommended**: Use the Spotify desktop application (Windows/Mac/Linux) for volume control
+- **Web Player not supported**: The Spotify Web Player does not allow volume control via the API
+- **Active device required**: A Spotify device must be playing for the control to work
+- **HTTPS in production**: To use the microphone in production, the application must be served over HTTPS
 
-## 🐛 Résolution de problèmes
+## 🐛 Troubleshooting
 
-### "Cannot control device volume" ou "VOLUME_CONTROL_DISALLOW"
+### "Cannot control device volume" or "VOLUME_CONTROL_DISALLOW"
 
-Cette erreur signifie que l'appareil actuel ne permet pas le contrôle du volume à distance.
+This error means that the current device does not allow remote volume control.
 
-**Solution** : Utilisez l'**application desktop Spotify** (Windows/Mac/Linux) au lieu de :
+**Solution**: Use the **Spotify desktop application** (Windows/Mac/Linux) instead of:
 - Spotify Web Player
-- Certaines enceintes connectées
-- Certains appareils mobiles selon la configuration
+- Some smart speakers
+- Some mobile devices depending on configuration
 
 ### "No active device"
 
-Assurez-vous qu'un appareil Spotify est actif avec de la musique en lecture.
+Make sure a Spotify device is active and playing music.
 
-### Le microphone ne fonctionne pas
+### The microphone does not work
 
-Vérifiez que :
-- Votre navigateur a la permission d'accéder au microphone
-- Vous utilisez HTTPS (en production)
-- Aucune autre application n'utilise le microphone
-- Vous parlez suffisamment fort (le volume doit dépasser 0%)
+Check that:
+- Your browser has permission to access the microphone
+- You are using HTTPS (in production)
+- No other application is using the microphone
+- You are speaking loud enough (volume must be above 0%)
 
-### Le volume reste à 0%
+### Volume stays at 0%
 
-Vérifiez que :
-- Vous autorisez bien l'accès au microphone
-- Vous parlez suffisamment fort pendant les 5 secondes
-- Votre micro fonctionne correctement
+Check that:
+- You have allowed microphone access
+- You are speaking loud enough during the 5 seconds
+- Your microphone works correctly
 
-### Le volume ne change pas sur Spotify
+### Volume does not change on Spotify
 
-Vérifiez que :
-- Vous êtes connecté avec un compte Spotify Premium
-- Vous utilisez l'application desktop Spotify
-- Un appareil est actif avec de la musique en lecture
-- Les redirections URI sont correctement configurées dans Spotify Developer Dashboard
+Check that:
+- You are logged in with a Spotify Premium account
+- You are using the Spotify desktop application
+- A device is active with music playing
+- Redirect URIs are correctly configured in the Spotify Developer Dashboard
 
-## 📝 Licence
+## 📝 License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE.md](./LICENSE.md) file for details.
 
-## 🤝 Contribution
+## 🤝 Contributing
 
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+Contributions are welcome! See the [CONTRIBUTING.md](./CONTRIBUTING.md) file for details.

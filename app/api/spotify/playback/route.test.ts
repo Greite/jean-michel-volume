@@ -25,6 +25,14 @@ function postReq(body: unknown, ip: string) {
   });
 }
 
+function rawReq(body: string, ip: string) {
+  return new Request('http://localhost/api/spotify/playback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-forwarded-for': ip },
+    body,
+  });
+}
+
 beforeEach(() => {
   mockedSession.mockResolvedValue({ accessToken: 'tok', user: { email: 'u@e.com' } } as never);
 });
@@ -46,6 +54,13 @@ describe('GET /api/spotify/playback', () => {
   it('502 si getPlaybackState renvoie null', async () => {
     vi.mocked(getPlaybackState).mockResolvedValueOnce(null);
     expect((await GET()).status).toBe(502);
+  });
+
+  it('500 quand getPlaybackState rejette (erreur interne)', async () => {
+    vi.mocked(getPlaybackState).mockRejectedValueOnce(new Error('boom'));
+    const res = await GET();
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe('Internal server error');
   });
 });
 
@@ -72,5 +87,34 @@ describe('POST /api/spotify/playback', () => {
     const res = await POST(postReq({ action: 'transfer', deviceId: 'd9' }, '2.2.2.4'));
     expect(res.status).toBe(200);
     expect(transferPlayback).toHaveBeenCalledWith('tok', 'd9');
+  });
+
+  it('400 pour un JSON invalide', async () => {
+    const res = await POST(rawReq('not json', '3.3.3.1'));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('Invalid JSON');
+  });
+
+  it('propage le statut d’erreur Spotify (body JSON)', async () => {
+    vi.mocked(controlPlayback).mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: { reason: 'NO_ACTIVE_DEVICE' } }), { status: 404 }),
+    );
+    const res = await POST(postReq({ action: 'pause' }, '3.3.3.2'));
+    expect(res.status).toBe(404);
+    expect((await res.json()).details).toEqual({ error: { reason: 'NO_ACTIVE_DEVICE' } });
+  });
+
+  it('propage le statut d’erreur Spotify avec un body non-JSON', async () => {
+    vi.mocked(controlPlayback).mockResolvedValueOnce(new Response('plain text', { status: 500 }));
+    const res = await POST(postReq({ action: 'pause' }, '3.3.3.3'));
+    expect(res.status).toBe(500);
+    expect((await res.json()).details).toEqual({ error: 'plain text' });
+  });
+
+  it('500 quand controlPlayback rejette (erreur interne)', async () => {
+    vi.mocked(controlPlayback).mockRejectedValueOnce(new Error('boom'));
+    const res = await POST(postReq({ action: 'pause' }, '3.3.3.4'));
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe('Internal server error');
   });
 });

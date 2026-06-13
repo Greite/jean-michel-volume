@@ -21,6 +21,14 @@ function makeRequest(body: unknown, headers: Record<string, string> = {}) {
   });
 }
 
+function rawRequest(body: string, headers: Record<string, string> = {}) {
+  return new Request('http://localhost/api/spotify/volume', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body,
+  });
+}
+
 beforeEach(() => {
   mockedSession.mockResolvedValue({ accessToken: 'tok', user: { email: 'u@e.com' } } as never);
 });
@@ -53,6 +61,26 @@ describe('POST /api/spotify/volume', () => {
     );
     const res = await POST(makeRequest({ volume: 30 }, { 'x-forwarded-for': '1.1.1.4' }));
     expect(res.status).toBe(404);
+  });
+
+  it('retourne 400 pour un JSON invalide', async () => {
+    const res = await POST(rawRequest('not json', { 'x-forwarded-for': '4.4.4.1' }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('Invalid JSON');
+  });
+
+  it('propage l’erreur Spotify avec un body non-JSON', async () => {
+    mockedSetVolume.mockResolvedValueOnce(new Response('oops', { status: 500 }));
+    const res = await POST(makeRequest({ volume: 30 }, { 'x-forwarded-for': '4.4.4.2' }));
+    expect(res.status).toBe(500);
+    expect((await res.json()).details).toEqual({ error: 'oops' });
+  });
+
+  it('500 quand setSpotifyVolume rejette (erreur interne)', async () => {
+    mockedSetVolume.mockRejectedValueOnce(new Error('boom'));
+    const res = await POST(makeRequest({ volume: 30 }, { 'x-forwarded-for': '4.4.4.3' }));
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe('Internal server error');
   });
 
   it('retourne 429 quand le rate-limit est dépassé', async () => {

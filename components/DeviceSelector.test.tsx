@@ -38,4 +38,10 @@ describe('DeviceSelector', () => {
     await user.click(screen.getByRole('button', { name: /Phone/ }));
     expect(onSelect).toHaveBeenCalledWith('b');
   });
+
+  it('rend un device de type inconnu (glyphe de repli)', () => {
+    const devices = [deviceFixture({ id: 'z', name: 'Grille-pain', type: 'Toaster', isActive: false })];
+    renderWithProviders(<DeviceSelector devices={devices} activeDeviceId={null} onSelect={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Grille-pain/ })).toBeInTheDocument();
+  });
 });

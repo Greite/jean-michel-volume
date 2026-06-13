@@ -29,4 +29,23 @@ describe('NowPlaying', () => {
     await user.click(screen.getByRole('button', { name: DICTIONARIES.fr['controls.next'] }));
     expect(handlers.onNext).toHaveBeenCalled();
   });
+
+  it('affiche le bouton lecture (PlayIcon) quand isPlaying=false et déclenche onPlayPause', async () => {
+    const user = userEvent.setup();
+    const onPlayPause = vi.fn();
+    renderWithProviders(
+      <NowPlaying
+        track={trackFixture()}
+        device={deviceFixture()}
+        isPlaying={false}
+        onPlayPause={onPlayPause}
+        onPrevious={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+    const playButton = screen.getByRole('button', { name: DICTIONARIES.fr['controls.play'] });
+    expect(playButton).toBeInTheDocument();
+    await user.click(playButton);
+    expect(onPlayPause).toHaveBeenCalled();
+  });
 });

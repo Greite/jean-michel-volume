@@ -285,7 +285,7 @@ describe('useSpotifyPlayback', () => {
       if (originalHidden) {
         Object.defineProperty(document, 'hidden', originalHidden);
       } else {
-        // @ts-expect-error cleanup test override so it falls back to the prototype getter
+        // cleanup test override so it falls back to the prototype getter
         delete (document as { hidden?: boolean }).hidden;
       }
     }

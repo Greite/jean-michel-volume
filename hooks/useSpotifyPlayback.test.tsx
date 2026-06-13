@@ -272,13 +272,23 @@ describe('useSpotifyPlayback', () => {
     await flushMicrotasks();
     const afterInitial = fetchMock.mock.calls.length;
 
+    const originalHidden = Object.getOwnPropertyDescriptor(document, 'hidden');
     Object.defineProperty(document, 'hidden', { configurable: true, value: false });
-    await act(async () => {
-      document.dispatchEvent(new Event('visibilitychange'));
-      await Promise.resolve();
-    });
+    try {
+      await act(async () => {
+        document.dispatchEvent(new Event('visibilitychange'));
+        await Promise.resolve();
+      });
 
-    expect(fetchMock.mock.calls.length).toBeGreaterThan(afterInitial);
+      expect(fetchMock.mock.calls.length).toBeGreaterThan(afterInitial);
+    } finally {
+      if (originalHidden) {
+        Object.defineProperty(document, 'hidden', originalHidden);
+      } else {
+        // @ts-expect-error cleanup test override so it falls back to the prototype getter
+        delete (document as { hidden?: boolean }).hidden;
+      }
+    }
   });
 
   it('passer à paused=true annule le polling planifié', async () => {

@@ -12,7 +12,7 @@ describe('VolumeHistory', () => {
     ];
     renderWithProviders(<VolumeHistory history={history} lastPeak={80} />);
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.getAllByText('80%').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('80%')).toHaveLength(2);
   });
 
   it('n’affiche pas le pic max quand lastPeak est null', () => {

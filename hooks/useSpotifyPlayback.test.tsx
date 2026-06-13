@@ -280,4 +280,57 @@ describe('useSpotifyPlayback', () => {
 
     expect(fetchMock.mock.calls.length).toBeGreaterThan(afterInitial);
   });
+
+  it('passer à paused=true annule le polling planifié', async () => {
+    fetchMock.mockReturnValue(okJson(playbackStateFixture()));
+
+    const { rerender } = renderHook((props: { paused: boolean }) => useSpotifyPlayback(props), {
+      initialProps: { paused: false },
+      wrapper,
+    });
+
+    // Flush the immediate fetch on mount and let the first poll be scheduled.
+    await flushMicrotasks();
+    const afterInitial = fetchMock.mock.calls.length;
+    expect(afterInitial).toBeGreaterThanOrEqual(1);
+
+    // Re-render with paused=true: the effect cleanup + paused branch must clear
+    // the pending poll timeout (line 170) so no further fetch fires.
+    expect(() => rerender({ paused: true })).not.toThrow();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(POLL_INTERVAL_ACTIVE_MS * 3);
+    });
+
+    expect(fetchMock.mock.calls.length).toBe(afterInitial);
+  });
+
+  it('fetchPlayback ignore une AbortError', async () => {
+    const abortErr = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    fetchMock.mockReturnValueOnce(Promise.reject(abortErr));
+
+    const { result } = renderHook(() => useSpotifyPlayback({ paused: true }), { wrapper });
+
+    await act(async () => {
+      await result.current.refresh();
+    });
+    await flushMicrotasks();
+
+    expect(result.current.apiError).toBeNull();
+  });
+
+  it('sendAction ignore une AbortError et renvoie false', async () => {
+    const abortErr = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    fetchMock.mockReturnValueOnce(Promise.reject(abortErr));
+
+    const { result } = renderHook(() => useSpotifyPlayback({ paused: true }), { wrapper });
+
+    let returned: boolean | undefined;
+    await act(async () => {
+      returned = await result.current.sendAction('pause');
+    });
+
+    expect(returned).toBe(false);
+    expect(result.current.apiError).toBeNull();
+  });
 });

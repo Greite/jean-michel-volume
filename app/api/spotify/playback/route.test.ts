@@ -117,4 +117,40 @@ describe('POST /api/spotify/playback', () => {
     expect(res.status).toBe(500);
     expect((await res.json()).error).toBe('Internal server error');
   });
+
+  it('401 sans session', async () => {
+    mockedSession.mockResolvedValueOnce(null as never);
+    const res = await POST(postReq({ action: 'pause' }, '5.5.5.1'));
+    expect(res.status).toBe(401);
+  });
+
+  it('429 lorsque la limite de débit est dépassée', async () => {
+    vi.mocked(controlPlayback).mockResolvedValue(new Response(null, { status: 204 }));
+    let lastStatus = 0;
+    for (let i = 0; i < 25; i += 1) {
+      const res = await POST(postReq({ action: 'pause' }, '5.5.5.99'));
+      lastStatus = res.status;
+    }
+    expect(lastStatus).toBe(429);
+  });
+
+  it('400 quand action n’est pas une chaîne', async () => {
+    const res = await POST(postReq({ action: 123 }, '5.5.5.2'));
+    expect(res.status).toBe(400);
+  });
+
+  it('400 quand deviceId a un mauvais type', async () => {
+    const res = await POST(postReq({ action: 'transfer', deviceId: 123 }, '5.5.5.3'));
+    expect(res.status).toBe(400);
+  });
+
+  it('400 quand le corps n’est pas un objet', async () => {
+    const res = await POST(rawReq('42', '5.5.5.4'));
+    expect(res.status).toBe(400);
+  });
+
+  it('400 quand le corps est null', async () => {
+    const res = await POST(rawReq('null', '5.5.5.5'));
+    expect(res.status).toBe(400);
+  });
 });

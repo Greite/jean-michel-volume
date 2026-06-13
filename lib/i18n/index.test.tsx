@@ -59,4 +59,15 @@ describe('useTranslation', () => {
     act(() => {});
     expect(result.current.locale).toBe('en');
   });
+
+  it('détecte "en" via navigator.language quand rien n’est stocké', () => {
+    Object.defineProperty(navigator, 'language', { value: 'en-US', configurable: true });
+    try {
+      const { result } = renderHook(() => useTranslation(), { wrapper });
+      act(() => {});
+      expect(result.current.locale).toBe('en');
+    } finally {
+      Object.defineProperty(navigator, 'language', { value: 'fr-FR', configurable: true });
+    }
+  });
 });

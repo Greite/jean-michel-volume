@@ -19,4 +19,14 @@ describe('VolumeHistory', () => {
     renderWithProviders(<VolumeHistory history={[]} lastPeak={null} />);
     expect(screen.queryByText('%', { exact: false })).not.toBeInTheDocument();
   });
+
+  it('formate les libellés relatifs en minutes et en heures', () => {
+    const history = [
+      { peak: 40, at: Date.now() - 120_000 },
+      { peak: 60, at: Date.now() - 7_200_000 },
+    ];
+    renderWithProviders(<VolumeHistory history={history} lastPeak={60} />);
+    expect(screen.getByText('2m')).toBeInTheDocument();
+    expect(screen.getByText('2h')).toBeInTheDocument();
+  });
 });

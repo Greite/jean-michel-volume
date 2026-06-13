@@ -100,4 +100,20 @@ describe('useVoiceVolume', () => {
     expect(result.current.currentVolume).toBe(0);
     expect(onComplete).toHaveBeenCalledWith(expect.any(Number));
   });
+
+  it('nettoie les ressources au démontage pendant un enregistrement', async () => {
+    const trackStop = vi.fn();
+    const stream = { getTracks: () => [{ stop: trackStop }] };
+    const getUserMedia = vi.fn().mockResolvedValue(stream);
+    installAudioMocks(getUserMedia);
+
+    const { result, unmount } = renderHook(() => useVoiceVolume());
+    await act(async () => {
+      await result.current.startRecording();
+    });
+    expect(result.current.isRecording).toBe(true);
+
+    expect(() => unmount()).not.toThrow();
+    expect(trackStop).toHaveBeenCalled();
+  });
 });

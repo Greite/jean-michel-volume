@@ -92,6 +92,91 @@ describe('getPlaybackState', () => {
 
     expect(await getPlaybackState(TOKEN)).toBeNull();
   });
+
+  it('laisse devices=[] quand la requête devices échoue (non ok)', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({
+          is_playing: true,
+          progress_ms: 5000,
+          device: {
+            id: 'd1',
+            name: 'Mac',
+            type: 'Computer',
+            is_active: true,
+            volume_percent: 30,
+            supports_volume: true,
+          },
+          item: {
+            name: 'Song',
+            artists: [{ name: 'A' }],
+            album: { name: 'Alb', images: [{ url: 'big' }] },
+            duration_ms: 200000,
+            external_urls: { spotify: 'https://x' },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(new Response('err', { status: 500 }));
+
+    const state = await getPlaybackState(TOKEN);
+    expect(state?.devices).toEqual([]);
+    expect(state?.track?.name).toBe('Song');
+  });
+
+  it('track null quand item est null (lecture stoppée)', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({
+          is_playing: false,
+          progress_ms: null,
+          device: {
+            id: 'd1',
+            name: 'Mac',
+            type: 'Computer',
+            is_active: false,
+            volume_percent: 10,
+            supports_volume: true,
+          },
+          item: null,
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ devices: [] }));
+
+    const state = await getPlaybackState(TOKEN);
+    expect(state?.track).toBeNull();
+    expect(state?.isPlaying).toBe(false);
+    expect(state?.device?.id).toBe('d1');
+  });
+
+  it('gère les valeurs nulles/absentes du track (image vide, pas d’URL, progress null)', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({
+          is_playing: true,
+          progress_ms: null,
+          device: {
+            id: 'd1',
+            name: 'Mac',
+            type: 'Computer',
+            is_active: true,
+            volume_percent: 20,
+            supports_volume: true,
+          },
+          item: {
+            name: 'Song',
+            artists: [{ name: 'A' }],
+            album: { name: 'A', images: [] },
+            duration_ms: 100000,
+          },
+        }),
+      )
+      .mockResolvedValueOnce(jsonResponse({ devices: [] }));
+
+    const state = await getPlaybackState(TOKEN);
+    expect(state?.track?.imageUrl).toBeNull();
+    expect(state?.track?.externalUrl).toBeNull();
+    expect(state?.track?.progressMs).toBe(0);
+  });
 });
 
 describe('setSpotifyVolume', () => {

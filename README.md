@@ -15,7 +15,7 @@ A modern web application that lets you control your Spotify volume in real time 
 ### Prerequisites
 
 - Node.js LTS (recommended: use [nvm](https://github.com/nvm-sh/nvm))
-- pnpm installed
+- [Bun](https://bun.sh) installed
 - A Spotify Premium account (required for the playback control API)
 - A modern browser with microphone support
 
@@ -39,7 +39,7 @@ nvm install
 ### 3. Install dependencies
 
 ```bash
-pnpm install
+bun install
 ```
 
 ### 4. Configure Spotify Developer
@@ -70,7 +70,7 @@ AUTH_URL=http://localhost:3000
 ### 6. Run the application
 
 ```bash
-pnpm dev
+bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.

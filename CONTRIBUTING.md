@@ -29,7 +29,7 @@ cd jean-michel-volume
 
 ```bash
 nvm use
-pnpm install
+bun install
 ```
 
 ### 3. Create a branch
@@ -44,10 +44,10 @@ git checkout -b fix/my-fix
 
 ### 4. Develop
 
-- Start the development server: `pnpm dev`
+- Start the development server: `bun dev`
 - Follow the existing code style (Biome is configured)
-- Run linting + type check: `pnpm lint` (runs `tsc` then Biome check/format)
-- Auto-fix formatting and lint issues: `pnpm biome:write`
+- Run linting + type check: `bun run lint` (runs `tsc` then Biome check/format)
+- Auto-fix formatting and lint issues: `bun run biome:write`
 
 ### 5. Commits
 
@@ -72,8 +72,8 @@ Examples:
 
 ## 📋 Pre-PR checklist
 
-- [ ] Code compiles without errors (`pnpm build`)
-- [ ] Linting and type check pass (`pnpm lint`)
+- [ ] Code compiles without errors (`bun run build`)
+- [ ] Linting and type check pass (`bun run lint`)
 - [ ] Application works locally
 - [ ] Documentation is updated if necessary
 - [ ] Commits follow the project convention

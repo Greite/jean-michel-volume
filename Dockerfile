@@ -1,17 +1,14 @@
-FROM node:krypton-alpine AS base
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM oven/bun:1-alpine AS base
 
 # Dependencies stage
 FROM base AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN bun install --frozen-lockfile --ignore-scripts
 
 # Builder stage
 FROM base AS builder
@@ -22,7 +19,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build the application
-RUN pnpm build
+RUN bun run build
 
 # Runner stage
 FROM base AS runner
@@ -48,4 +45,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["bun", "server.js"]

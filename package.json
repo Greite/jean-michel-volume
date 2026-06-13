@@ -4,14 +4,17 @@
   "private": true,
   "engines": {
     "node": ">=22.0.0",
-    "pnpm": ">=10.0.0"
+    "bun": ">=1.2.0"
   },
+  "trustedDependencies": [
+    "sharp"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "prelint": "next typegen",
-    "lint": "pnpm tsc && pnpm biome:check && pnpm biome:format",
+    "lint": "bun run tsc && bun run biome:check && bun run biome:format",
     "tsc": "tsc --noEmit --pretty",
     "biome:check": "biome check .",
     "biome:check:write": "biome check --write .",
@@ -21,22 +24,22 @@
     "gen:icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
-    "next": "^16.2.5",
+    "next": "^16.2.9",
     "next-auth": "^4.24.14",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "spotify-web-api-node": "^5.0.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.11",
-    "@tailwindcss/postcss": "^4.2.4",
-    "@types/node": "^25.6.0",
-    "@types/react": "^19.2.14",
+    "@biomejs/biome": "^2.5.0",
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "1.0.0",
     "png-to-ico": "^3.0.1",
-    "sharp": "^0.34.5",
-    "tailwindcss": "^4.2.4",
+    "sharp": "^0.35.1",
+    "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3"
   }
 }

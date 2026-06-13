@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.0/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -11,7 +11,7 @@
       "**",
       "!**/node_modules",
       "!**/.next",
-      "!**/.pnpm-store",
+      "!**/.bun",
       "!**/out",
       "!**/build",
       "!**/dist",
@@ -23,7 +23,7 @@
       "!next-env.d.ts",
       "!next.config.ts",
       "!next.config.js",
-      "!pnpm-lock.yaml",
+      "!bun.lock",
       "!CLAUDE.md"
     ]
   },
@@ -58,7 +58,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "style": {
         "useImportType": "error",
         "noNonNullAssertion": "off",
@@ -88,7 +88,7 @@
         "noUndeclaredDependencies": "error"
       },
       "a11y": {
-        "recommended": true,
+        "preset": "recommended",
         "noSvgWithoutTitle": "warn",
         "noStaticElementInteractions": "off",
         "useSemanticElements": "off"

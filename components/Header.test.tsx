@@ -17,11 +17,14 @@ describe('Header', () => {
     renderWithProviders(<Header />);
     expect(screen.getByRole('banner')).toBeInTheDocument();
     expect(screen.getByRole('radiogroup', { name: /lang/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /se connecter/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /déconnexion|quitter/i })).not.toBeInTheDocument();
   });
 
   it('affiche SignOut quand connecté', () => {
     vi.mocked(useSession).mockReturnValue({ data: { accessToken: 'x' } } as never);
     renderWithProviders(<Header />);
-    expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /déconnexion|quitter/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /se connecter/i })).not.toBeInTheDocument();
   });
 });

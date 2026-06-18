@@ -3,7 +3,7 @@
   "version": "2.0.2",
   "private": true,
   "engines": {
-    "node": ">=22.0.0",
+    "node": ">=22.5.0",
     "bun": ">=1.2.0"
   },
   "trustedDependencies": [
@@ -24,11 +24,14 @@
     "gen:icons": "node scripts/generate-icons.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "better-auth": "^1.6.19",
+    "drizzle-orm": "1.0.0-rc.4-5d5b77c",
     "next": "^16.2.9",
-    "next-auth": "^4.24.14",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "spotify-web-api-node": "^5.0.2"
@@ -46,6 +49,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.8",
     "babel-plugin-react-compiler": "1.0.0",
+    "drizzle-kit": "1.0.0-rc.4-5d5b77c",
     "jsdom": "^29.1.1",
     "png-to-ico": "^3.0.1",
     "sharp": "^0.35.1",

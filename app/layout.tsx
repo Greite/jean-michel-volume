@@ -25,7 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXTAUTH_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(process.env.AUTH_URL ?? 'http://localhost:3000'),
   title: {
     default: 'Jean-Michel Volume',
     template: '%s · Jean-Michel Volume',

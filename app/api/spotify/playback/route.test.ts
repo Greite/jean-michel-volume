@@ -1,21 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/app/api/auth/[...nextauth]/route', () => ({ authOptions: {} }));
-vi.mock('next-auth/next', () => ({ getServerSession: vi.fn() }));
+vi.mock('next/headers', () => ({ headers: vi.fn(async () => new Headers()) }));
+vi.mock('@/lib/auth', () => ({
+  auth: { api: { getSession: vi.fn(), getAccessToken: vi.fn() } },
+}));
 vi.mock('@/lib/spotify-api', () => ({
   getPlaybackState: vi.fn(),
   controlPlayback: vi.fn(),
   transferPlayback: vi.fn(),
 }));
 
-import { getServerSession } from 'next-auth/next';
-
 import { GET, POST } from './route';
 
+import { auth } from '@/lib/auth';
 import { controlPlayback, getPlaybackState, transferPlayback } from '@/lib/spotify-api';
 import { playbackStateFixture } from '@/test/fixtures';
 
-const mockedSession = vi.mocked(getServerSession);
+const mockedSession = vi.mocked(auth.api.getSession);
 
 function postReq(body: unknown, ip: string) {
   return new Request('http://localhost/api/spotify/playback', {
@@ -34,7 +35,8 @@ function rawReq(body: string, ip: string) {
 }
 
 beforeEach(() => {
-  mockedSession.mockResolvedValue({ accessToken: 'tok', user: { email: 'u@e.com' } } as never);
+  mockedSession.mockResolvedValue({ user: { id: 'u1' } } as never);
+  vi.mocked(auth.api.getAccessToken).mockResolvedValue({ accessToken: 'tok' } as never);
 });
 afterEach(() => vi.clearAllMocks());
 

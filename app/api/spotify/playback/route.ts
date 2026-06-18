@@ -1,7 +1,7 @@
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { auth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { checkRateLimit, getClientKey } from '@/lib/rate-limit';
 import { controlPlayback, getPlaybackState, transferPlayback } from '@/lib/spotify-api';
@@ -29,12 +29,24 @@ function isPlaybackBody(value: unknown): value is PlaybackBody {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.accessToken) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  let accessToken: string;
   try {
-    const state = await getPlaybackState(session.accessToken);
+    const token = await auth.api.getAccessToken({
+      body: { providerId: 'spotify' },
+      headers: await headers(),
+    });
+    accessToken = token.accessToken;
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const state = await getPlaybackState(accessToken);
     if (!state) {
       return NextResponse.json({ error: 'Failed to get playback state' }, { status: 502 });
     }
@@ -46,13 +58,23 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.accessToken) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const userKey = session.user?.email ?? session.user?.name ?? 'anon';
-  const key = getClientKey(request.headers, userKey);
+  let accessToken: string;
+  try {
+    const token = await auth.api.getAccessToken({
+      body: { providerId: 'spotify' },
+      headers: await headers(),
+    });
+    accessToken = token.accessToken;
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const key = getClientKey(request.headers, session.user.id);
   const rl = checkRateLimit(`playback:${key}`);
   if (!rl.allowed) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
@@ -75,9 +97,9 @@ export async function POST(request: Request) {
       if (!body.deviceId) {
         return NextResponse.json({ error: 'deviceId required for transfer' }, { status: 400 });
       }
-      res = await transferPlayback(session.accessToken, body.deviceId);
+      res = await transferPlayback(accessToken, body.deviceId);
     } else {
-      res = await controlPlayback(session.accessToken, body.action);
+      res = await controlPlayback(accessToken, body.action);
     }
 
     if (!res.ok && res.status !== 204) {

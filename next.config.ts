@@ -17,6 +17,7 @@ const isDev = process.env.NODE_ENV !== "production";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   output: "standalone",
+  serverExternalPackages: ["drizzle-orm"],
   ...(isDev ? { allowedDevOrigins: ["127.0.0.1"] } : {}),
   images: {
     remotePatterns: [

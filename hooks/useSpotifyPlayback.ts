@@ -1,8 +1,8 @@
 'use client';
 
-import { signOut } from 'next-auth/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { authClient } from '@/lib/auth-client';
 import { clientLogger } from '@/lib/client-logger';
 import { POLL_INTERVAL_ACTIVE_MS, POLL_INTERVAL_IDLE_MS, SPOTIFY_ERROR_REASON_VOLUME_DISALLOW } from '@/lib/constants';
 import { useTranslation } from '@/lib/i18n';
@@ -40,7 +40,17 @@ export function useSpotifyPlayback(options: UseSpotifyPlaybackOptions = {}) {
   const handleAuthFailure = useCallback(() => {
     clientLogger.error('Token expired, signing out...');
     setApiError(t('errors.sessionExpired'));
-    setTimeout(() => signOut({ callbackUrl: '/' }), 2000);
+    setTimeout(
+      () =>
+        authClient.signOut({
+          fetchOptions: {
+            onSuccess: () => {
+              window.location.href = '/';
+            },
+          },
+        }),
+      2000,
+    );
   }, [t]);
 
   const mapApiError = useCallback(

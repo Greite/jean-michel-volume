@@ -39,3 +39,7 @@ README.md
 
 # Claude
 .claude/
+
+# Base SQLite locale
+/data
+*.db

@@ -2,17 +2,17 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 
 import { LanguageToggle } from './LanguageToggle';
 import { SignInButton } from './SignInButton';
 import { SignOutButton } from './SignOutButton';
 import { ThemeToggle } from './ThemeToggle';
 
+import { authClient } from '@/lib/auth-client';
 import { useTranslation } from '@/lib/i18n';
 
 export function Header() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const { t } = useTranslation();
 
   return (

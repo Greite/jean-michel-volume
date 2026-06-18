@@ -106,9 +106,10 @@ For more details about deployment, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ```env
 AUTH_SECRET=<your-generated-secret>
-NEXTAUTH_URL=http://localhost:3000
+AUTH_URL=http://localhost:3000
 SPOTIFY_CLIENT_ID=<your-client-id>
 SPOTIFY_CLIENT_SECRET=<your-client-secret>
+DATABASE_PATH=./data/sqlite.db
 ```
 
 2. **Run the application**:
@@ -139,9 +140,11 @@ docker build -t jean-michel-volume .
 docker run -d \
   -p 3000:3000 \
   -e AUTH_SECRET=<your-secret> \
-  -e NEXTAUTH_URL=http://localhost:3000 \
+  -e AUTH_URL=http://localhost:3000 \
   -e SPOTIFY_CLIENT_ID=<your-client-id> \
   -e SPOTIFY_CLIENT_SECRET=<your-client-secret> \
+  -e DATABASE_PATH=/app/data/sqlite.db \
+  -v ./data:/app/data \
   --name jean-michel-volume \
   jean-michel-volume
 ```
@@ -152,12 +155,15 @@ All environment variables can be configured at runtime:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `AUTH_SECRET` | NextAuth secret (generated with `openssl rand -base64 32`) | `7mP9J/4M1NIYREuOMkJ...` |
-| `NEXTAUTH_URL` | Base URL of the application | `http://localhost:3000` |
+| `AUTH_SECRET` | Better Auth secret (generated with `openssl rand -base64 32`) | `7mP9J/4M1NIYREuOMkJ...` |
+| `AUTH_URL` | Base URL of the application | `http://localhost:3000` |
 | `SPOTIFY_CLIENT_ID` | Client ID of your Spotify app | `4a1cdbadbd514e73...` |
 | `SPOTIFY_CLIENT_SECRET` | Client Secret of your Spotify app | `3ecc6d66c05241dd...` |
+| `DATABASE_PATH` | SQLite database file path (default `./data/sqlite.db`) | `/app/data/sqlite.db` |
 
-**Note**: In production, change `NEXTAUTH_URL` to point to your domain (e.g., `https://your-domain.com`)
+**Note**: In production, change `AUTH_URL` to point to your domain (e.g., `https://your-domain.com`).
+
+**Persistence**: The volume `./data:/app/data` must be mounted to keep sessions across container restarts.
 
 ## 📖 How to use it
 
@@ -172,7 +178,7 @@ All environment variables can be configured at runtime:
 - **Next.js 16**: React framework with App Router
 - **TypeScript**: Static typing
 - **Tailwind CSS 4**: Modern and responsive styling
-- **NextAuth.js**: OAuth authentication
+- **Better Auth**: OAuth authentication
 - **Web Audio API**: Real-time voice volume analysis
 - **Spotify Web API**: Playback control
 
@@ -181,7 +187,7 @@ All environment variables can be configured at runtime:
 ```
 ├── app/
 │   ├── api/
-│   │   ├── auth/[...nextauth]/route.ts  # NextAuth route
+│   │   ├── auth/[...all]/route.ts       # Better Auth route
 │   │   └── spotify/volume/route.ts      # Volume control API
 │   ├── layout.tsx                       # Main layout
 │   └── page.tsx                         # Home page
@@ -189,10 +195,16 @@ All environment variables can be configured at runtime:
 │   └── VoiceVolumeController.tsx        # Voice control component
 ├── hooks/
 │   └── useVoiceVolume.ts                # Audio analysis hook
+├── db/
+│   ├── index.ts                         # Drizzle database client
+│   └── schema.ts                        # SQLite schema (users, sessions, accounts)
+├── drizzle/                             # Drizzle migration files
+├── instrumentation.ts                   # Runs DB migrations on boot
 ├── lib/
-│   └── auth.ts                          # NextAuth configuration
+│   ├── auth.ts                          # Better Auth server config
+│   └── auth-client.ts                   # Better Auth React client
 └── types/
-    └── next-auth.d.ts                   # NextAuth TypeScript types
+    └── spotify.ts                       # Spotify API types
 ```
 
 ## 🔧 Technical details

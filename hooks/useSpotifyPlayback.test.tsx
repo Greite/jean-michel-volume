@@ -1,20 +1,20 @@
 import { renderHook } from '@testing-library/react';
-import { signOut } from 'next-auth/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useSpotifyPlayback } from './useSpotifyPlayback';
 
+import { authClient } from '@/lib/auth-client';
 import { POLL_INTERVAL_ACTIVE_MS } from '@/lib/constants';
 import { I18nProvider } from '@/lib/i18n';
 import { DICTIONARIES } from '@/lib/i18n/dictionaries';
 import { playbackStateFixture } from '@/test/fixtures';
 
-vi.mock('next-auth/react', () => ({
-  signOut: vi.fn(),
+vi.mock('@/lib/auth-client', () => ({
+  authClient: { signOut: vi.fn() },
 }));
 
-const signOutMock = vi.mocked(signOut);
+const signOutMock = vi.mocked(authClient.signOut);
 
 function wrapper({ children }: { children: React.ReactNode }) {
   return <I18nProvider>{children}</I18nProvider>;
@@ -173,7 +173,7 @@ describe('useSpotifyPlayback', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
-    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: '/' });
+    expect(signOutMock).toHaveBeenCalled();
   });
 
   it('sendAction sur 404 mappe vers errors.spotify404', async () => {
@@ -216,7 +216,7 @@ describe('useSpotifyPlayback', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
-    expect(signOutMock).toHaveBeenCalledWith({ callbackUrl: '/' });
+    expect(signOutMock).toHaveBeenCalled();
   });
 
   it('refresh sur 404 réinitialise l’état en conservant les devices', async () => {

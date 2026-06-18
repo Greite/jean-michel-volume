@@ -12,9 +12,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # NextAuth Configuration
+      # Better Auth
       - AUTH_SECRET=${AUTH_SECRET}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - AUTH_URL=${AUTH_URL:-http://localhost:3000}
+
+      # Base SQLite (persistée via le volume ci-dessous)
+      - DATABASE_PATH=/app/data/sqlite.db
 
       # Spotify API Configuration
       - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
@@ -27,6 +30,5 @@ services:
       # Node Environment
       - NODE_ENV=production
     restart: unless-stopped
-    # Optionally use an env file
-    # env_file:
-    #   - .env.production
+    volumes:
+      - ./data:/app/data

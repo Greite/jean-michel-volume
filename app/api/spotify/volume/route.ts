@@ -1,7 +1,7 @@
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { auth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { checkRateLimit, getClientKey } from '@/lib/rate-limit';
 import { setSpotifyVolume } from '@/lib/spotify-api';
@@ -17,14 +17,24 @@ function isVolumeBody(value: unknown): value is VolumeBody {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth.api.getSession({ headers: await headers() });
 
-  if (!session?.accessToken) {
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const userKey = session.user?.email ?? session.user?.name ?? 'anon';
-  const key = getClientKey(request.headers, userKey);
+  let accessToken: string;
+  try {
+    const token = await auth.api.getAccessToken({
+      body: { providerId: 'spotify' },
+      headers: await headers(),
+    });
+    accessToken = token.accessToken;
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const key = getClientKey(request.headers, session.user.id);
   const rl = checkRateLimit(`vol:${key}`);
   if (!rl.allowed) {
     return NextResponse.json(
@@ -50,7 +60,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await setSpotifyVolume(session.accessToken, body.volume);
+    const response = await setSpotifyVolume(accessToken, body.volume);
 
     if (!response.ok) {
       const errorText = await response.text();

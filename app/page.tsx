@@ -1,6 +1,5 @@
-import { getServerSession } from 'next-auth/next';
+import { headers } from 'next/headers';
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
@@ -8,9 +7,10 @@ import { HowItWorks } from '@/components/HowItWorks';
 import { ImportantNotes } from '@/components/ImportantNotes';
 import { VoiceVolumeController } from '@/components/VoiceVolumeController';
 import { WelcomeCard } from '@/components/WelcomeCard';
+import { auth } from '@/lib/auth';
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
+  const session = await auth.api.getSession({ headers: await headers() });
 
   return (
     <div className="relative flex min-h-screen flex-col">

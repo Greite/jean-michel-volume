@@ -63,9 +63,10 @@ docker pull ghcr.io/greite/jean-michel-volume:1.0.0
 Create a `.env` file with your variables:
 ```bash
 AUTH_SECRET=your-auth-secret
-NEXTAUTH_URL=https://your-domain.com
+AUTH_URL=https://your-domain.com
 SPOTIFY_CLIENT_ID=your-spotify-client-id
 SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
+DATABASE_PATH=/app/data/sqlite.db
 DEBUG_MODE=false
 NEXT_PUBLIC_DEBUG_MODE=false
 ```
@@ -89,8 +90,12 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    volumes:
+      - ./data:/app/data
     restart: unless-stopped
 ```
+
+> **Persistence**: The volume `./data:/app/data` is required to persist the SQLite database across container restarts. Without it, all sessions are lost when the container stops.
 
 ## Local build
 

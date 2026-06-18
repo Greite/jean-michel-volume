@@ -24,9 +24,10 @@ Edit the `.env` file with your real values:
 
 ```env
 AUTH_SECRET=<generated with: openssl rand -base64 32>
-NEXTAUTH_URL=http://localhost:3000
+AUTH_URL=http://localhost:3000
 SPOTIFY_CLIENT_ID=<your-client-id>
 SPOTIFY_CLIENT_SECRET=<your-client-secret>
+DATABASE_PATH=./data/sqlite.db
 ```
 
 ### 2. Run the application
@@ -75,13 +76,16 @@ docker rmi jean-michel-volume
 
 ## 🌐 Production deployment
 
-### 1. Update NEXTAUTH_URL
+### 1. Update AUTH_URL
 
-For a production deployment, update `NEXTAUTH_URL` in your `.env` file:
+For a production deployment, update `AUTH_URL` in your `.env` file:
 
 ```env
-NEXTAUTH_URL=https://your-domain.com
+AUTH_URL=https://your-domain.com
+DATABASE_PATH=/app/data/sqlite.db
 ```
+
+> **Persistence**: Mount the volume `./data:/app/data` to keep sessions across container restarts. Without it, the SQLite database is lost when the container stops.
 
 ### 2. Configure a reverse proxy
 
@@ -130,13 +134,49 @@ docker build -t jean-michel-volume:latest .
 docker run -d \
   -p 3000:3000 \
   -e AUTH_SECRET=<your-secret> \
-  -e NEXTAUTH_URL=http://localhost:3000 \
+  -e AUTH_URL=http://localhost:3000 \
   -e SPOTIFY_CLIENT_ID=<your-client-id> \
   -e SPOTIFY_CLIENT_SECRET=<your-client-secret> \
+  -e DATABASE_PATH=/app/data/sqlite.db \
+  -v ./data:/app/data \
   --name jean-michel-volume \
   --restart unless-stopped \
   jean-michel-volume:latest
 ```
+
+## 🏠 Running on Unraid (PUID/PGID)
+
+The image supports `PUID` and `PGID` environment variables (default: `1001`) so the container process can match the ownership of the host directory mapped to `/app/data`.
+
+On Unraid, appdata directories are typically owned by `99:100` (user `nobody`, group `users`). Without setting `PUID`/`PGID`, the default uid 1001 cannot write to that directory and Drizzle migrations fail at boot.
+
+Set `PUID`/`PGID` to match the owner of your host appdata directory:
+
+```bash
+# Check the owner of your appdata dir on the host
+ls -lan /mnt/user/appdata/jean-michel-volume
+```
+
+Then run the container accordingly:
+
+```bash
+docker run -d \
+  -p 3000:3000 \
+  -e AUTH_SECRET=<generated with: openssl rand -base64 32> \
+  -e AUTH_URL=http://<your-unraid-ip>:3000 \
+  -e SPOTIFY_CLIENT_ID=<your-client-id> \
+  -e SPOTIFY_CLIENT_SECRET=<your-client-secret> \
+  -e PUID=99 \
+  -e PGID=100 \
+  -v /mnt/user/appdata/jean-michel-volume:/app/data \
+  --name jean-michel-volume \
+  --restart unless-stopped \
+  jean-michel-volume:latest
+```
+
+> **AUTH_URL** must equal the URL the app is actually accessed at — better-auth validates the request Origin against it. If you access the app at `http://192.168.1.10:3000`, set `AUTH_URL=http://192.168.1.10:3000`.
+
+> **Spotify redirect URI**: In the Spotify Developer Dashboard, add `<AUTH_URL>/api/auth/callback/spotify` as an allowed redirect URI (e.g. `http://192.168.1.10:3000/api/auth/callback/spotify`).
 
 ## 🔐 Security
 
@@ -148,7 +188,7 @@ docker run -d \
 
 ### Permissions
 
-The application runs as a non-root user (`nextjs:nodejs`) for added security.
+The container starts as root, chowns `/app/data` to `PUID:PGID`, then drops privileges via `su-exec` before running the app. The app process never runs as root.
 
 ## 🐛 Troubleshooting
 
